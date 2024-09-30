@@ -1,0 +1,153 @@
+{
+    "$defs": {
+        "harbor": {
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                },
+                "location": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                },
+                "corporations": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                    },
+                    "minItems": 1
+                },
+                "shipyardStation": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "repairCost": {
+                            "type": "integer",
+                            "minimum": 100,
+                            "maximum": 500
+                        },
+                        "shipCost": {
+                            "type": "integer",
+                            "minimum": 1000,
+                            "maximum": 5000
+                        },
+                        "deliveryTime": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 10
+                        },
+                        "shipProperties": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "maxVelocity": {
+                                    "type": "integer",
+                                    "minimum": 50,
+                                    "maximum": 150
+                                },
+                                "acceleration": {
+                                    "type": "integer",
+                                    "minimum": 15,
+                                    "maximum": 30
+                                },
+                                "fuelConsumption": {
+                                    "type": "integer",
+                                    "minimum": 8,
+                                    "maximum": 12
+                                },
+                                "fuelCapacity": {
+                                    "type": "integer",
+                                    "minimum": 10000,
+                                    "maximum": 20000
+                                },
+                                "refuelingCapacity": {
+                                    "type": "integer",
+                                    "minimum": 25000,
+                                    "maximum": 200000
+                                },
+                                "refuelingTime": {
+                                    "type": "integer",
+                                    "minimum": 2,
+                                    "maximum": 5
+                                }
+                            },
+                            "required": [
+                               "maxVelocity",
+                               "acceleration",
+                               "fuelConsumption",
+                               "fuelCapacity",
+                               "refuelingCapacity",
+                               "refuelingTime"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "repairCost",
+                        "shipCost",
+                        "deliveryTime",
+                        "shipProperties"
+                    ],
+                    "type": "object"
+                },
+                "refuelingStation": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "refuelCost": {
+                            "type": "integer",
+                            "minimum": 400,
+                            "maximum": 800
+                        },
+                        "refuelTimes": {
+                            "type": "integer",
+                            "minimum": 5,
+                            "maximum": 100
+                        }
+                    },
+                    "required": [
+                        "refuelCost",
+                        "refuelTimes"
+                    ],
+                    "type": "object"
+                },
+                "unloadingStation": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "unloadReturn": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5
+                        },
+                        "garbageTypes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "PLASTIC",
+                                    "OIL",
+                                    "CHEMICALS"
+                                ]
+                            },
+                            "minItems": 0,
+                            "uniqueItems": true
+                        }
+                    },
+                    "required": [
+                        "unloadReturn",
+                        "garbageTypes"
+                    ],
+                    "type": "object"
+                }
+            },
+            "required": [
+                "id",
+                "location",
+                "corporations"
+            ],
+           "type": "object"
+        }
+    }
+}

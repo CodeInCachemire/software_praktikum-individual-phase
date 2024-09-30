@@ -1,0 +1,94 @@
+{
+    "corporations": [
+        {
+            "id": 0,
+            "name": "Ocean Cleaners Inc.",
+            "ships": [
+                0, 1, 2
+            ],
+            "homeHarbors": [
+                0, 1
+            ],
+            "garbageTypes": ["OIL"],
+            "credits": 5000
+        },
+        {
+            "id": 1,
+            "name": "Ocean Cleaners Inc. 2",
+            "ships": [
+                3, 4
+            ],
+            "homeHarbors": [
+                0
+            ],
+            "garbageTypes": ["PLASTIC"],
+            "credits": 4000
+        }
+    ],
+
+    "ships": [
+        {
+            "id": 0,
+            "name": "Explorer",
+            "type": "SCOUTING",
+            "corporation": 0,
+            "location": 5,
+            "maxVelocity": 100,
+            "acceleration": 25,
+            "fuelCapacity": 4000,
+            "fuelConsumption": 10,
+            "visibilityRange": 3
+        },
+        {
+            "id": 1,
+            "name": "Coordinator",
+            "type": "COORDINATING",
+            "corporation": 0,
+            "location": 5,
+            "maxVelocity": 10,
+            "acceleration": 5,
+            "fuelCapacity": 3898,
+            "fuelConsumption": 5,
+            "visibilityRange": 1
+        },
+        {
+            "id": 2,
+            "name": "Collector",
+            "type": "COLLECTING",
+            "corporation": 0,
+            "location": 5,
+            "maxVelocity": 12,
+            "acceleration": 5,
+            "fuelCapacity": 3898,
+            "fuelConsumption": 6,
+            "garbageType": "OIL",
+            "capacity": 50000
+        },
+        {
+            "id": 3,
+            "name": "Collector 2",
+            "type": "COLLECTING",
+            "corporation": 1,
+            "location": 6,
+            "maxVelocity": 12,
+            "acceleration": 6,
+            "fuelCapacity": 4532,
+            "fuelConsumption": 6,
+            "garbageType": "PLASTIC",
+            "capacity": 2000
+        },
+        {
+            "id": 4,
+            "name": "Explorer 2",
+            "type": "SCOUTING",
+            "corporation": 1,
+            "location": 6,
+            "maxVelocity": 75,
+            "acceleration": 15,
+            "fuelCapacity": 4000,
+            "fuelConsumption": 9,
+            "visibilityRange": 3
+        }
+    ]
+
+}
