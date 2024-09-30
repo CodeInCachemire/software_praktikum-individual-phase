@@ -71,7 +71,7 @@ dependencies {
     
     // Testing
     testImplementation(kotlin("test"))
-    testImplementation("org.mockito:mockito-core:5.13.0") // from 5.12.0
+    testImplementation("org.mockito:mockito-core:5.13.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 
     // System Tests
@@ -197,8 +197,8 @@ val systemtestExec = task<JavaExec>("systemtestExec") {
     classpath(files("libs/selab.jar"))
     mainClass.set("de.unisaarland.cs.se.selab.systemtest.MainKt")
     args = listOf(
-        "--jar", "../referenz-implementation/libs/selab.jar",
-        "--run", "all",
+        "--jar", "libs/selab.jar",
+        "--run", "system",
         "--timeout", "10",
 //        "--debug", "1337"
     )
