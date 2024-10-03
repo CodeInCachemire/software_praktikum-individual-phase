@@ -7,6 +7,8 @@ import com.github.erosb.jsonsKema.ValidationFailure
 import com.github.erosb.jsonsKema.Validator
 import com.github.erosb.jsonsKema.ValidatorConfig
 import de.unisaarland.cs.se.selab.Constants
+import de.unisaarland.cs.se.selab.Constants.MAX_STRENGTH
+import de.unisaarland.cs.se.selab.Constants.MIN_STRENGTH
 import de.unisaarland.cs.se.selab.data.Garbage
 import de.unisaarland.cs.se.selab.data.Reward
 import de.unisaarland.cs.se.selab.data.TaskData
@@ -20,6 +22,7 @@ import de.unisaarland.cs.se.selab.event.OilEvent
 import de.unisaarland.cs.se.selab.event.PirateEvent
 import de.unisaarland.cs.se.selab.event.RestrictionEvent
 import de.unisaarland.cs.se.selab.event.StormEvent
+import de.unisaarland.cs.se.selab.event.TyphoonEvent
 import de.unisaarland.cs.se.selab.task.CollectingTask
 import de.unisaarland.cs.se.selab.task.CooperationTask
 import de.unisaarland.cs.se.selab.task.ExploreTask
@@ -439,7 +442,7 @@ class ScenarioParser(private val simulationData: SimulationData) {
                 // check if the tile id exists in the map
                 if (!simulationData.tiles.containsKey(json.getInt(JsonKeys.LOCATION))) {
                     return Result.failure(
-                        ParserException("Tile id ${json.getInt(JsonKeys.LOCATION)} does not exist on map")
+                        ParserException("Tile id ${json.getInt(JsonKeys.LOCATION)} does not exist on map.")
                     )
                 }
                 if (!validateTileType(simulationData.tiles.getValue(json.getInt(JsonKeys.LOCATION)))) {
@@ -461,7 +464,7 @@ class ScenarioParser(private val simulationData: SimulationData) {
             override fun createEventFromJson(json: JSONObject, simulationData: SimulationData): Result<Event> {
                 val shipId = json.getInt(JsonKeys.SHIP_ID)
                 if (!simulationData.ships.containsKey(shipId)) {
-                    return Result.failure(ParserException("Ship id $shipId does not exist"))
+                    return Result.failure(ParserException("Ship id $shipId does not exist."))
                 }
                 return Result.success(
                     PirateEvent(
@@ -471,7 +474,34 @@ class ScenarioParser(private val simulationData: SimulationData) {
                     )
                 )
             }
-        };
+        },
+        TYPHOON(setOf(JsonKeys.LOCATION, JsonKeys.STRENGTH, JsonKeys.RADIUS)) {
+            override fun createEventFromJson(json: JSONObject, simulationData: SimulationData): Result<Event> {
+                if (!simulationData.tiles.containsKey(json.getInt(JsonKeys.LOCATION))) {
+                    return Result.failure(
+                        ParserException("Tile id ${json.getInt(JsonKeys.LOCATION)} does not exist on the map")
+                    )
+                }
+                if (!validateTileType(simulationData.tiles.getValue(json.getInt(JsonKeys.LOCATION)))) {
+                    return Result.failure(ParserException("Invalid tile type for the event typhoon"))
+                }
+
+                if (json.getInt(JsonKeys.STRENGTH) !in MIN_STRENGTH..MAX_STRENGTH) {
+                    return Result.failure(ParserException("Invalid strength value for the event typhoon"))
+                }
+                val tile = simulationData.tiles.getValue(json.getInt(JsonKeys.LOCATION))
+                return Result.success(
+                    TyphoonEvent(
+                        json.getInt(JsonKeys.RADIUS),
+                        json.getInt(JsonKeys.STRENGTH),
+                        tile,
+                        json.getInt(JsonKeys.ID),
+                        json.getInt(JsonKeys.TICK)
+                    )
+                )
+            }
+        }
+        ;
 
         /**
          * Returns the allowed keys for this event type

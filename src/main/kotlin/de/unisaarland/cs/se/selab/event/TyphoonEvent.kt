@@ -1,0 +1,96 @@
+package de.unisaarland.cs.se.selab.event
+
+import de.unisaarland.cs.se.selab.Logger
+import de.unisaarland.cs.se.selab.data.Garbage
+import de.unisaarland.cs.se.selab.data.OceanMap
+import de.unisaarland.cs.se.selab.data.Ship
+import de.unisaarland.cs.se.selab.data.Tile
+import de.unisaarland.cs.se.selab.enums.GarbageType
+import de.unisaarland.cs.se.selab.enums.RewardType
+const val ACCELERATION_DECREASE = 4
+const val MIN_VELOCITY = 40
+const val STRENGTH1 = 1
+const val STRENGTH2 = 2
+const val STRENGTH3 = 3
+const val STRENGTH4 = 4
+
+/**
+ * Oil event will create new oil garbage to the tiles that are affected by this event.
+ */
+class TyphoonEvent(
+    private val radius: Int,
+    private val strength: Int,
+    val location: Tile,
+    id: Int,
+    tick: Int
+) : Event(id, tick) {
+    val createdGarbage = mutableListOf<Garbage>()
+
+    override fun execute(oceanMap: OceanMap) {
+        val affectedTiles = oceanMap.getTilesInRadius(location, radius)
+        val affectedShips = sortedSetOf<Ship>()
+        affectedTiles.forEach {
+                tile ->
+            affectedShips.addAll(oceanMap.getShipsOnTile(tile))
+        }
+        Logger.logTyphoon(id, radius, location.id, affectedShips)
+        when (strength) {
+            STRENGTH1 -> affectedShips.forEach { ship -> increaseFuelConsumption(ship) }
+            STRENGTH2 -> affectedShips.forEach { ship ->
+                increaseFuelConsumption(ship)
+                destroyTelescopesAndRadios(ship)
+            }
+            STRENGTH3 -> affectedShips.forEach { ship ->
+                increaseFuelConsumption(ship)
+                destroyTelescopesAndRadios(ship)
+                unloadGarbageShip(ship, oceanMap)
+            }
+            STRENGTH4 -> affectedShips.forEach { ship ->
+                increaseFuelConsumption(ship)
+                destroyTelescopesAndRadios(ship)
+                unloadGarbageShip(ship, oceanMap)
+                damageShip(ship)
+            }
+        }
+    }
+
+    private fun increaseFuelConsumption(ship: Ship) {
+        ship.fuelConsumption *= 2
+    }
+    private fun destroyTelescopesAndRadios(ship: Ship) {
+        if (RewardType.RADIO in ship.reward || RewardType.TELESCOPE in ship.reward) {
+            ship.reward.removeAll(listOf(RewardType.TELESCOPE, RewardType.RADIO))
+        }
+    }
+    private fun unloadGarbageShip(ship: Ship, oceanMap: OceanMap) {
+        // So we will iterate through every garbage type in the ORDER PLASTIC, OIL, CHEMICALS
+        for (garbageType in GarbageType.entries) {
+            // IF a garbage type is in the ship's garbage capacity type then we continue
+            if (garbageType in ship.garbageCapacity.keys) {
+                // we first get the maxcapacity for that garbage capacity
+                val garbageTypeCapacity = ship.maxGarbageCapacity.getValue(garbageType)
+                val currentGarbageCapacity = ship.garbageCapacity.getValue(garbageType)
+                val amountCollectedForType = garbageTypeCapacity - currentGarbageCapacity
+                ship.garbageCapacity[garbageType] = garbageTypeCapacity
+                if (amountCollectedForType > 0) {
+                    val garbageNew =
+                        Garbage(
+                            oceanMap.getMaxGarbageId() + 1,
+                            garbageType,
+                            amountCollectedForType
+                        )
+                    oceanMap.addGarbage(garbageNew, oceanMap.getShipTile(ship))
+                    createdGarbage.add(garbageNew)
+                }
+            }
+        }
+    }
+
+    private fun damageShip(ship: Ship) {
+        ship.acceleration = (ship.acceleration - ACCELERATION_DECREASE).coerceAtLeast(1)
+        if (ship.velocity > MIN_VELOCITY) {
+            ship.velocity = ship.velocity.coerceAtLeast(MIN_VELOCITY)
+        }
+        ship.isDamaged = true
+    }
+}

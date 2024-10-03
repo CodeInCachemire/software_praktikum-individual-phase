@@ -61,4 +61,7 @@ object JsonKeys {
     const val OIL_SPILL = "OIL_SPILL"
     const val STORM = "STORM"
     const val RESTRICTION = "RESTRICTION"
+    const val TYPHOON = "TYPHOON"
+    const val HARBORID = "harborID"
+    const val STRENGTH = "strength"
 }

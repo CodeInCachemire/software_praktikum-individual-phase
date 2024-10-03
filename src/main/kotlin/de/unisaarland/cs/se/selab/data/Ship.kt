@@ -16,9 +16,9 @@ class Ship(
     val type: ShipType,
     val corporation: Corporation,
     val maxVelocity: Int,
-    val acceleration: Int,
+    var acceleration: Int,
     val maxFuel: Int,
-    val fuelConsumption: Int,
+    var fuelConsumption: Int,
     var visibilityRange: Int,
     val maxGarbageCapacity: MutableMap<GarbageType, Int>
 ) : Comparable<Ship> {
@@ -30,6 +30,7 @@ class Ship(
     var behaviour = Behaviour.DEFAULT
     val garbageCapacity = maxGarbageCapacity.toMutableMap()
     var waitingAtHarbor = false
+    var isDamaged = false
 
     /**
      * Accelerates the ship and increases its current velocity
