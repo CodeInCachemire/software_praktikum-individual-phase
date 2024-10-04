@@ -10,7 +10,8 @@ data class Tile(
     val type: TileType,
     val current: Current?,
     val coordinate: Coordinate,
-    val harbor: Boolean
+    val harbor: Boolean,
+    val harborID: Int?
 ) : Comparable<Tile> {
     var numRestrictions = 0
     val restricted get() = numRestrictions > 0

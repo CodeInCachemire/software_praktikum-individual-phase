@@ -9,7 +9,8 @@ import java.util.SortedSet
 data class Corporation(
     val id: Int,
     val harbors: Set<Tile>,
-    val garbageTypes: List<GarbageType>
+    val garbageTypes: List<GarbageType>,
+    val credits: Int
 ) {
     val ships = mutableListOf<Ship>()
     val assignedShipsPerTile = mutableMapOf<Tile, MutableList<Ship>>()

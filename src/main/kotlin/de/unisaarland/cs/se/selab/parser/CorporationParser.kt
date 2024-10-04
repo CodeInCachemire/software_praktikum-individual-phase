@@ -130,8 +130,8 @@ class CorporationParser(private val jsonString: String, private var simulationDa
         val garbageJson = corp.getJSONArray(JsonKeys.GARBAGE_TYPES)
         val parseCorpGarbageTypesRes = parseCorpGarbageTypes(id, garbageJson)
         parseCorpGarbageTypesRes.onFailure { return parseCorpGarbageTypesRes }
-
-        val corporation = Corporation(id, harbors, garbageTypes.getValue(id).toList())
+        val credits = corp.getInt(JsonKeys.CREDITS)
+        val corporation = Corporation(id, harbors, garbageTypes.getValue(id).toList(), credits)
         corporationsById[id] = corporation
 
         return Result.success(Unit)
@@ -169,18 +169,10 @@ class CorporationParser(private val jsonString: String, private var simulationDa
         val res = mutableSetOf<Tile>()
         for (harbor in harborsJson) {
             try {
-                val harborTileID = (harbor ?: return Result.failure(ParserException("JSON Harbor ID was null."))) as Int
+                val harborID = (harbor ?: return Result.failure(ParserException("JSON Harbor ID was null."))) as Int
                 // get tile of claimed harbor
-                val harborTile =
-                    oceanMap.getTileByID(harborTileID)
-                        .getOrElse {
-                            return Result.failure(ParserException("Claimed harbor $harborTileID is not a tile."))
-                        }
-
-                // checking that tile is actually a harbor
-                if (!simulationData.harborTiles.contains(harborTile)) {
-                    return Result.failure(ParserException("Claimed harbor $harborTileID is not a harbor."))
-                }
+                val harborTile = checkHarbor(harborID)
+                    .getOrElse { return Result.failure(ParserException("Some parsing failures")) }
                 claimedHarbors.add(harborTile)
 
                 // adding harbor to currentInfo of corp
@@ -191,6 +183,26 @@ class CorporationParser(private val jsonString: String, private var simulationDa
         }
 
         return Result.success(res)
+    }
+
+    private fun checkHarbor(harborID: Int): Result<Tile> {
+        // get tile of claimed harbor
+        val harborExists = simulationData.harborMap[harborID]
+            ?: return Result.failure(ParserException("Harbor $harborID is not an actual harbor."))
+        val harborTileID = harborExists.location
+        val harborTile =
+            oceanMap.getTileByID(harborTileID)
+                .getOrElse {
+                    return Result.failure(ParserException("Harbor $harborID does not exist on a tile."))
+                }
+        // checking that tile is actually a harbor
+        if (!simulationData.harborTiles.contains(harborTile)
+        ) {
+            return Result.failure(
+                ParserException("Harbor $harborTile is not a harbor.")
+            )
+        }
+        return Result.success(harborTile)
     }
 
     /**

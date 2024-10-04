@@ -13,6 +13,7 @@ object SystemTestRegistration {
      */
     fun registerSystemTestsReferenceImpl(manager: SystemTestManager) {
         manager.registerTest(ExampleTest())
+        manager.registerTest(ExampleTest2())
     }
 
     /**

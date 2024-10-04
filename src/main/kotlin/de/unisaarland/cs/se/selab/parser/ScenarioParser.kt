@@ -489,12 +489,12 @@ class ScenarioParser(private val simulationData: SimulationData) {
                 if (json.getInt(JsonKeys.STRENGTH) !in MIN_STRENGTH..MAX_STRENGTH) {
                     return Result.failure(ParserException("Invalid strength value for the event typhoon"))
                 }
-                val tile = simulationData.tiles.getValue(json.getInt(JsonKeys.LOCATION))
+                val location = simulationData.tiles.getValue(json.getInt(JsonKeys.LOCATION))
                 return Result.success(
                     TyphoonEvent(
                         json.getInt(JsonKeys.RADIUS),
                         json.getInt(JsonKeys.STRENGTH),
-                        tile,
+                        location,
                         json.getInt(JsonKeys.ID),
                         json.getInt(JsonKeys.TICK)
                     )

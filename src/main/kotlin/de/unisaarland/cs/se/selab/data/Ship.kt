@@ -11,7 +11,7 @@ import kotlin.math.min
 /**
  * The Ship class
  */
-class Ship(
+open class Ship(
     val id: Int,
     val type: ShipType,
     val corporation: Corporation,

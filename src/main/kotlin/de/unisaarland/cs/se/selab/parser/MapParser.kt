@@ -10,8 +10,13 @@ import com.github.erosb.jsonsKema.ValidatorConfig
 import de.unisaarland.cs.se.selab.Constants
 import de.unisaarland.cs.se.selab.data.Coordinate
 import de.unisaarland.cs.se.selab.data.Current
+import de.unisaarland.cs.se.selab.data.Harbor
 import de.unisaarland.cs.se.selab.data.OceanMap
+import de.unisaarland.cs.se.selab.data.RefuelingStation
+import de.unisaarland.cs.se.selab.data.ShipyardStation
 import de.unisaarland.cs.se.selab.data.Tile
+import de.unisaarland.cs.se.selab.data.UnloadingStation
+import de.unisaarland.cs.se.selab.enums.GarbageType
 import de.unisaarland.cs.se.selab.enums.TileType
 import org.json.JSONArray
 import org.json.JSONObject
@@ -22,6 +27,7 @@ import org.json.JSONObject
 class MapParser(private var simulationData: SimulationData) {
     private val tilesMap: MutableMap<Int, Tile> = mutableMapOf()
     private val tileCoordinates: MutableMap<Coordinate, Tile> = mutableMapOf()
+    private val harborsMap: MutableMap<Int, Harbor> = mutableMapOf()
 
     /**
      * Parses the map from the JSON file.
@@ -38,8 +44,12 @@ class MapParser(private var simulationData: SimulationData) {
 
         val json = JSONObject(jsonString)
         val tiles = json.getJSONArray(JsonKeys.TILES)
+        val harbors = json.getJSONArray(JsonKeys.HARBORS)
         parseTiles(tiles).onFailure { return Result.failure(it) }
+        parseHarbors(harbors).onFailure { return Result.failure(it) }
+        validateEachStationPresent().onFailure { return Result.failure(it) }
         simulationData.tiles.putAll(tilesMap)
+        simulationData.harborMap.putAll(harborsMap)
         simulationData.oceanMap = OceanMap(tileCoordinates)
         return Result.success(Unit)
     }
@@ -73,6 +83,130 @@ class MapParser(private var simulationData: SimulationData) {
         return Result.success(Unit)
     }
 
+    private fun parseHarbors(harbors: JSONArray): Result<Unit> {
+        harbors.forEach { harbor ->
+            if (harbor is JSONObject) {
+                val harborID = harbor.getInt(JsonKeys.ID)
+                if (harborID in this.harborsMap.keys) {
+                    return Result.failure(ParserException("Harbor with id $harborID already exists."))
+                }
+                val harborObject = validateAndCreateHarbors(harbor, harborID).getOrElse { return Result.failure(it) }
+                // check if the tile id is already present
+                harborsMap[harborObject.id] = harborObject // add the tile to the map
+            } else {
+                return Result.failure(ParserException("Harbor is not a JSONObject."))
+            }
+        }
+        // add harbors to the simulation data
+        return Result.success(Unit)
+    }
+
+    private fun validateAndCreateHarbors(harbor: JSONObject, harborID: Int): Result<Harbor> {
+        // check if the keys are valid
+        if (!validateKeySetOfHarbor(harbor)) {
+            return Result.failure(ParserException("Invalid keys in harbor $harbor."))
+        }
+        validateHarborWithTile(harbor).getOrElse { return Result.failure(it) }
+        val harborCorporationIntIds = harbor.getJSONArray(JsonKeys.CORPORATIONS)
+            .map { (it ?: error("Garbage type cannot be null")) as Int }
+        if (harborCorporationIntIds.isEmpty()) {
+            return Result.failure(ParserException("Harbor $harborID has no corporations, must have atleast one corp"))
+        }
+        // This is some messed up shit, someone help me, I hope my parser is not constricting too much.
+        val shipyardStation = if (harbor.has(JsonKeys.SHIPYARD_STATION)) {
+            createShipyardStation(harbor)
+        } else {
+            null
+        }
+        val refuelStation = if (harbor.has(JsonKeys.REFUELING_STATION)) {
+            val refuelCost = harbor.getJSONObject(JsonKeys.REFUELING_STATION).getInt(JsonKeys.REFUEL_COST)
+            val refuelTimes = harbor.getJSONObject(JsonKeys.REFUELING_STATION).getInt(JsonKeys.REFUEL_TIMES)
+            RefuelingStation(refuelCost, refuelTimes)
+        } else {
+            null
+        }
+        val unloadStation = if (harbor.has(JsonKeys.UNLOADING_STATION)) {
+            val unloadReturn = harbor.getJSONObject(JsonKeys.UNLOADING_STATION).getInt(JsonKeys.UNLOAD_RETURN)
+            val garbageTypesUnload = harbor.getJSONObject(
+                JsonKeys.UNLOADING_STATION
+            ).getJSONArray(JsonKeys.GARBAGE_TYPES)
+            val garbageTypesUnloadValues = garbageTypesUnload
+                .map { GarbageType.valueOf((it ?: error("Garbage type cannot be null")) as String) }.toSet()
+            UnloadingStation(unloadReturn, garbageTypesUnloadValues)
+        } else {
+            null
+        }
+        val numOfStations = listOfNotNull(refuelStation, shipyardStation, unloadStation).size
+        if (numOfStations > 2) {
+            return Result.failure(ParserException("Harbor $harborID has 3 stations instead of 2."))
+        }
+        return Result.success(
+            Harbor(
+                harbor.getInt(JsonKeys.ID),
+                harbor.getInt(JsonKeys.LOCATION),
+                harborCorporationIntIds.toSet(),
+                shipyardStation,
+                refuelStation,
+                unloadStation
+            )
+        )
+    }
+
+    private fun createShipyardStation(harbor: JSONObject): ShipyardStation {
+        val repairCost = harbor.getJSONObject(JsonKeys.SHIPYARD_STATION).getInt(JsonKeys.REPAIR_COST)
+        val shipCost = harbor.getJSONObject(JsonKeys.SHIPYARD_STATION).getInt(JsonKeys.SHIP_COST)
+        val deliveryTime = harbor.getJSONObject(JsonKeys.SHIPYARD_STATION).getInt(JsonKeys.DELIVERY_TIME)
+        val shiPropsJson = harbor.getJSONObject(JsonKeys.SHIPYARD_STATION).getJSONObject(JsonKeys.SHIP_PROPERTIES)
+        val maxVelocity = shiPropsJson.getInt(JsonKeys.MAX_VELOCITY)
+        val acceleration = shiPropsJson.getInt(JsonKeys.ACCELERATION)
+        val fuelConsumption = shiPropsJson.getInt(JsonKeys.FUEL_CONSUMPTION)
+        val fuelCapacity = shiPropsJson.getInt(JsonKeys.FUEL_CAPACITY)
+        val refuelingCapacity = shiPropsJson.getInt(JsonKeys.REFUELING_CAPACITY)
+        val refuelingTime = shiPropsJson.getInt(JsonKeys.REFUELING_TIME)
+        return ShipyardStation(
+            repairCost, shipCost, deliveryTime, maxVelocity,
+            acceleration, fuelConsumption, fuelCapacity, refuelingCapacity, refuelingTime
+        )
+    }
+
+    private fun validateHarborWithTile(harbor: JSONObject): Result<Unit> {
+        val harborID = harbor.getInt(JsonKeys.ID)
+        val location = harbor.getInt(JsonKeys.LOCATION)
+        if (!tilesMap.containsKey(location)) {
+            return Result.failure(ParserException("Harbor $harborID has an invalid location on tile $location."))
+        }
+        if (tilesMap.getValue(location).type != TileType.SHORE) {
+            return Result.failure(ParserException("Harbor $harborID on tile $location which is not shore."))
+        }
+        if (!tilesMap.getValue(location).harbor) {
+            return Result.failure(ParserException("Harbor $harborID is on tile $location which has a false harbor."))
+        }
+        if (tilesMap.getValue(location).harborID != harborID) {
+            return Result.failure(
+                ParserException("Harbor $harborID is on tile $location which has a harbor with a different ID.")
+            )
+        }
+        return Result.success(Unit)
+    }
+
+    private fun validateEachStationPresent(): Result<Unit> {
+        val shipYardNum = harborsMap.values.fold(
+            0
+        ) { acc, harbor -> if (harbor.shipyardStation != null) acc + 1 else acc }
+        val refuelNum = harborsMap.values.fold(
+            0
+        ) { acc, harbor -> if (harbor.refuelingStation != null) acc + 1 else acc }
+        val unloadNum = harborsMap.values.fold(
+            0
+        ) { acc, harbor -> if (harbor.shipyardStation != null) acc + 1 else acc }
+        if (shipYardNum < 1 && refuelNum < 1 && unloadNum < 1) {
+            return Result.failure(
+                ParserException("One of each station is not present")
+            )
+        }
+        return Result.success(Unit)
+    }
+
     private fun validateAndCreateTiles(tile: JSONObject): Result<Tile> {
         // check if the keys are valid
         if (!validateKeySet(tile)) {
@@ -96,15 +230,87 @@ class MapParser(private var simulationData: SimulationData) {
         // get the drift of the tile
         val (harbor, drift) = validateSpecialTiles(tile).getOrElse { return Result.failure(it) }
         // create tile
-        return Result.success(
-            Tile(
-                tile.getInt(JsonKeys.ID),
-                TileType.createTileType(type),
-                drift,
-                coordinate,
-                harbor
-            )
+        val createdTile: Tile
+        if (harbor) {
+            val harborID = tile.getInt(JsonKeys.HARBORID)
+            createdTile =
+                Tile(
+                    tile.getInt(JsonKeys.ID),
+                    TileType.createTileType(type),
+                    drift,
+                    coordinate,
+                    harbor,
+                    harborID
+                )
+        } else {
+            createdTile =
+                Tile(
+                    tile.getInt(JsonKeys.ID),
+                    TileType.createTileType(type),
+                    drift,
+                    coordinate,
+                    harbor,
+                    null
+                )
+        }
+        return Result.success(createdTile)
+    }
+
+    /**
+     *
+     */
+    private fun validateKeySetOfHarbor(harbor: JSONObject): Boolean {
+        val mandatoryKeys = setOf(
+            JsonKeys.ID,
+            JsonKeys.LOCATION,
+            JsonKeys.CORPORATIONS
         )
+        val shipyardKeys = setOf(
+            JsonKeys.REPAIR_COST,
+            JsonKeys.SHIP_COST,
+            JsonKeys.DELIVERY_TIME,
+            JsonKeys.SHIP_PROPERTIES
+        )
+        val refuelingKeys = setOf(
+            JsonKeys.REFUEL_COST,
+            JsonKeys.REFUEL_TIMES
+        )
+        val unloadingKeys = setOf(
+            JsonKeys.UNLOAD_RETURN,
+            JsonKeys.GARBAGE_TYPES
+        )
+        val shipPropKeys = setOf(
+            JsonKeys.MAX_VELOCITY,
+            JsonKeys.ACCELERATION,
+            JsonKeys.FUEL_CONSUMPTION,
+            JsonKeys.FUEL_CAPACITY,
+            JsonKeys.REFUELING_CAPACITY,
+            JsonKeys.REFUELING_TIME
+        )
+
+        if (!harbor.keySet().containsAll(mandatoryKeys)) {
+            return false
+        }
+
+        if (harbor.has(JsonKeys.SHIPYARD_STATION)) {
+            val shipyardStation = harbor.getJSONObject(JsonKeys.SHIPYARD_STATION)
+            if (!shipyardStation.keySet().containsAll(shipyardKeys) ||
+                !shipyardStation.getJSONObject(JsonKeys.SHIP_PROPERTIES).keySet().containsAll(shipPropKeys)
+            ) {
+                return false
+            }
+        }
+        if (harbor.has(JsonKeys.REFUELING_STATION)) {
+            if (!harbor.getJSONObject(JsonKeys.REFUELING_STATION).keySet().containsAll(refuelingKeys)) {
+                return false
+            }
+        }
+        if (harbor.has(JsonKeys.UNLOADING_STATION)) {
+            if (!harbor.getJSONObject(JsonKeys.UNLOADING_STATION).keySet().containsAll(unloadingKeys)) {
+                return false
+            }
+        }
+        return true
     }
 
     /**
@@ -124,12 +330,22 @@ class MapParser(private var simulationData: SimulationData) {
             }
 
             JsonKeys.SHORE -> {
-                setOf(
-                    JsonKeys.ID,
-                    JsonKeys.COORDINATES,
-                    JsonKeys.CATEGORY,
-                    JsonKeys.HARBOR
-                )
+                if (tile.getBoolean(JsonKeys.HARBOR)) {
+                    setOf(
+                        JsonKeys.ID,
+                        JsonKeys.COORDINATES,
+                        JsonKeys.CATEGORY,
+                        JsonKeys.HARBOR,
+                        JsonKeys.HARBORID
+                    )
+                } else {
+                    setOf(
+                        JsonKeys.ID,
+                        JsonKeys.COORDINATES,
+                        JsonKeys.CATEGORY,
+                        JsonKeys.HARBOR,
+                    )
+                }
             }
 
             JsonKeys.DEEP_OCEAN -> {

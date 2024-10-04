@@ -2,6 +2,7 @@ package de.unisaarland.cs.se.selab.parser
 
 import de.unisaarland.cs.se.selab.data.Corporation
 import de.unisaarland.cs.se.selab.data.Garbage
+import de.unisaarland.cs.se.selab.data.Harbor
 import de.unisaarland.cs.se.selab.data.OceanMap
 import de.unisaarland.cs.se.selab.data.Reward
 import de.unisaarland.cs.se.selab.data.Ship
@@ -24,4 +25,5 @@ data class SimulationData(
     val garbage: MutableMap<Int, Garbage> = mutableMapOf()
     val corporations: MutableMap<Int, Corporation> = mutableMapOf()
     val harborTiles: MutableSet<Tile> = mutableSetOf()
+    val harborMap: MutableMap<Int, Harbor> = mutableMapOf()
 }
