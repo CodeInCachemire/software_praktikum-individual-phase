@@ -87,10 +87,10 @@ class MapParser(private var simulationData: SimulationData) {
         harbors.forEach { harbor ->
             if (harbor is JSONObject) {
                 val harborID = harbor.getInt(JsonKeys.ID)
-                if (harborID in this.harborsMap.keys) {
+                val harborObject = validateAndCreateHarbors(harbor, harborID).getOrElse { return Result.failure(it) }
+                if (harborObject.id in this.harborsMap.keys) {
                     return Result.failure(ParserException("Harbor with id $harborID already exists."))
                 }
-                val harborObject = validateAndCreateHarbors(harbor, harborID).getOrElse { return Result.failure(it) }
                 // check if the tile id is already present
                 harborsMap[harborObject.id] = harborObject // add the tile to the map
             } else {
@@ -199,7 +199,7 @@ class MapParser(private var simulationData: SimulationData) {
         val unloadNum = harborsMap.values.fold(
             0
         ) { acc, harbor -> if (harbor.shipyardStation != null) acc + 1 else acc }
-        if (shipYardNum < 1 && refuelNum < 1 && unloadNum < 1) {
+        if (shipYardNum < 1 || refuelNum < 1 || unloadNum < 1) {
             return Result.failure(
                 ParserException("One of each station is not present")
             )
