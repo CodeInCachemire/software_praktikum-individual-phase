@@ -175,15 +175,15 @@ class MapParser(private var simulationData: SimulationData) {
         if (!tilesMap.containsKey(location)) {
             return Result.failure(ParserException("Harbor $harborID has an invalid location on tile $location."))
         }
-        if (tilesMap.getValue(location).type != TileType.SHORE) {
+        val tileLoc = tilesMap[location]
+            ?: return Result.failure(ParserException("Harbor $harborID on tile $location which is null."))
+        if (tileLoc.type != TileType.SHORE) {
             return Result.failure(ParserException("Harbor $harborID on tile $location which is not shore."))
         }
-        if (!tilesMap.getValue(location).harbor) {
-            return Result.failure(ParserException("Harbor $harborID is on tile $location which has a false harbor."))
-        }
-        if (tilesMap.getValue(location).harborID != harborID) {
+        if (!tileLoc.harbor || tileLoc.harborID != harborID) {
             return Result.failure(
-                ParserException("Harbor $harborID is on tile $location which has a harbor with a different ID.")
+                ParserException
+                ("Harbor $harborID is on tile $location which has a harbor with a different ID or a false harbor.")
             )
         }
         return Result.success(Unit)
