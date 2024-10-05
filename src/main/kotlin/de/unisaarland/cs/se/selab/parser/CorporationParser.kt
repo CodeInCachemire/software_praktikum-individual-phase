@@ -186,26 +186,9 @@ class CorporationParser(private val jsonString: String, private var simulationDa
                 return Result.failure(ParserException("Some harbor ID was not an Int."))
             }
         }
-        checkHarborsMapForCorps()
-
         return Result.success(res)
     }
 
-    /**
-     * Checks harbors to corp mappings
-     */
-    private fun checkHarborsMapForCorps(): Result<Unit> {
-        for (harbor in simulationData.harborMap.values) {
-            harbor.corporations.forEach { corporation ->
-                if (corporation !in corporationsById.keys) {
-                    return Result.failure(
-                        ParserException("For harbor ${harbor.id} $corporation was not an CROPS ID LIST.")
-                    )
-                }
-            }
-        }
-        return Result.success(Unit)
-    }
     private fun checkHarbor(harborID: Int): Result<Tile> {
         // get tile of claimed harbor
         val harborExists = simulationData.harborMap[harborID]

@@ -17,6 +17,7 @@ data class OceanMap(
     val tileToHarbor = mutableMapOf<Tile, Harbor>()
     val harborToTile = mutableMapOf<Harbor, Tile>()
     val harborsMap: MutableMap<Int, Harbor> = mutableMapOf()
+    val harborTiles: MutableSet<Tile> = mutableSetOf()
 
     private var maxGarbageId = 0
 

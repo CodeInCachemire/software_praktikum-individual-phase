@@ -30,6 +30,7 @@ class MapParser(private var simulationData: SimulationData) {
     private val harborsMap: MutableMap<Int, Harbor> = mutableMapOf()
     private val tileToHarbor = mutableMapOf<Tile, Harbor>()
     private val harborToTile = mutableMapOf<Harbor, Tile>()
+    private val harborTiles: MutableSet<Tile> = mutableSetOf()
 
     /**
      * Parses the map from the JSON file.
@@ -49,7 +50,7 @@ class MapParser(private var simulationData: SimulationData) {
         val harbors = json.getJSONArray(JsonKeys.HARBORS)
         parseTiles(tiles).onFailure { return Result.failure(it) }
         parseHarbors(harbors).onFailure { return Result.failure(it) }
-        validateEachStationPresent().onFailure { return Result.failure(it) }
+        validateEachStationPresent()
         createMaps()
         simulationData.tiles.putAll(tilesMap)
         simulationData.harborMap.putAll(harborsMap)
@@ -57,6 +58,7 @@ class MapParser(private var simulationData: SimulationData) {
         oceanMap.harborsMap.putAll(harborsMap)
         oceanMap.tileToHarbor.putAll(tileToHarbor)
         oceanMap.harborToTile.putAll(harborToTile)
+        oceanMap.harborTiles.addAll(harborTiles)
         simulationData.oceanMap = oceanMap
         return Result.success(Unit)
     }
@@ -84,6 +86,7 @@ class MapParser(private var simulationData: SimulationData) {
         for (t in tilesMap.values) {
             if (t.harbor) {
                 simulationData.harborTiles.add(t)
+                harborTiles.add(t)
             }
         }
 
@@ -94,10 +97,10 @@ class MapParser(private var simulationData: SimulationData) {
         harbors.forEach { harbor ->
             if (harbor is JSONObject) {
                 val harborID = harbor.getInt(JsonKeys.ID)
-                if (harborID in this.harborsMap.keys) {
+                val harborObject = validateAndCreateHarbors(harbor, harborID).getOrElse { return Result.failure(it) }
+                if (harborObject.id in this.harborsMap.keys) {
                     return Result.failure(ParserException("Harbor with id $harborID already exists."))
                 }
-                val harborObject = validateAndCreateHarbors(harbor, harborID).getOrElse { return Result.failure(it) }
                 // check if the tile id is already present
                 harborsMap[harborObject.id] = harborObject // add the tile to the map
             } else {
@@ -161,7 +164,7 @@ class MapParser(private var simulationData: SimulationData) {
 
     private fun createMaps() {
         for (harbor in harborsMap.values) {
-            val tile = tilesMap.getValue(harbor.id)
+            val tile = tilesMap.getValue(harbor.location)
             tileToHarbor[tile] = harbor
             harborToTile[harbor] = tile
         }
