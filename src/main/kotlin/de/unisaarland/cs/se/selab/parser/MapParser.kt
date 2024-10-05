@@ -47,7 +47,7 @@ class MapParser(private var simulationData: SimulationData) {
         val harbors = json.getJSONArray(JsonKeys.HARBORS)
         parseTiles(tiles).onFailure { return Result.failure(it) }
         parseHarbors(harbors).onFailure { return Result.failure(it) }
-        // validateEachStationPresent().onFailure { return Result.failure(it) }
+        validateEachStationPresent()
         simulationData.tiles.putAll(tilesMap)
         simulationData.harborMap.putAll(harborsMap)
         simulationData.oceanMap = OceanMap(tileCoordinates)
@@ -103,9 +103,9 @@ class MapParser(private var simulationData: SimulationData) {
 
     private fun validateAndCreateHarbors(harbor: JSONObject, harborID: Int): Result<Harbor> {
         // check if the keys are valid
-        if (!validateKeySetOfHarbor(harbor)) {
+        /*if (!validateKeySetOfHarbor(harbor)) {
             return Result.failure(ParserException("Invalid keys in harbor $harbor."))
-        }
+        }*/
         validateHarborWithTile(harbor).getOrElse { return Result.failure(it) }
         val harborCorporationIntIds = harbor.getJSONArray(JsonKeys.CORPORATIONS)
             .map { (it ?: error("Garbage type cannot be null")) as Int }
@@ -189,7 +189,7 @@ class MapParser(private var simulationData: SimulationData) {
         return Result.success(Unit)
     }
 
-    /*private fun validateEachStationPresent(): Result<Unit> {
+    private fun validateEachStationPresent(): Result<Unit> {
         val shipYardNum = harborsMap.values.fold(
             0
         ) { acc, harbor -> if (harbor.shipyardStation != null) acc + 1 else acc }
@@ -205,7 +205,7 @@ class MapParser(private var simulationData: SimulationData) {
             )
         }
         return Result.success(Unit)
-    }*/
+    }
 
     private fun validateAndCreateTiles(tile: JSONObject): Result<Tile> {
         // check if the keys are valid
@@ -259,7 +259,7 @@ class MapParser(private var simulationData: SimulationData) {
     /**
      *
      */
-    private fun validateKeySetOfHarbor(harbor: JSONObject): Boolean {
+    /*private fun validateKeySetOfHarbor(harbor: JSONObject): Boolean {
         val mandatoryKeys = setOf(
             JsonKeys.ID,
             JsonKeys.LOCATION,
@@ -311,7 +311,7 @@ class MapParser(private var simulationData: SimulationData) {
             }
         }
         return true
-    }
+    }*/
 
     /**
      * Validate the JSON key set of the tile.
