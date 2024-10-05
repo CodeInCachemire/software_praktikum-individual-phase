@@ -1,11 +1,9 @@
 package de.unisaarland.cs.se.selab
 
-import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.enums.GarbageType
 import de.unisaarland.cs.se.selab.enums.RewardType
 import de.unisaarland.cs.se.selab.enums.TaskType
 import java.io.PrintWriter
-import java.util.SortedSet
 
 /**
  * The Logger object
@@ -206,17 +204,6 @@ object Logger {
     fun logEvent(eventId: Int, eventType: String) {
         printer.println("Event: Event $eventId of type $eventType happened.")
         printer.flush()
-    }
-
-    /**
-     *
-     */
-    fun logTyphoon(eventId: Int, radius: Int, tileID: Int, sortedShips: SortedSet<Ship>) {
-        val sortedShipsIDs = sortedShips.map { it.id }.joinToString(", ")
-        printer.println(
-            "Event: Typhoon $eventId at tile $tileID with radius $radius affected" +
-                " ships: $sortedShipsIDs."
-        )
     }
 
     /**

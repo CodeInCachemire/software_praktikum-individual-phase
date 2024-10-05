@@ -30,7 +30,14 @@ open class Ship(
     var behaviour = Behaviour.DEFAULT
     val garbageCapacity = maxGarbageCapacity.toMutableMap()
     var waitingAtHarbor = false
+    var waitingAtAShipyard = false
+    var waitingAtARefuelingStation = false
+    var waitingAtAUnloadingStation = false
     var isDamaged = false
+    val maxVelocityOriginal = maxVelocity
+    val accelerationOriginal = acceleration
+    var beingRefueledByShip = false
+    val visibilityRangeOriginal = visibilityRange
 
     /**
      * Accelerates the ship and increases its current velocity

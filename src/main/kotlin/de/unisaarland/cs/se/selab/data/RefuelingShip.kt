@@ -25,4 +25,8 @@ class RefuelingShip(
     fuelConsumption,
     visibilityRange = 0,
     maxGarbageCapacity = mutableMapOf()
-)
+) {
+    init {
+        reward.clear()
+    }
+}

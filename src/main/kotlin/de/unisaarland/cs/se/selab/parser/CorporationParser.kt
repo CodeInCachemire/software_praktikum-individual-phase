@@ -124,7 +124,7 @@ class CorporationParser(private val jsonString: String, private var simulationDa
 
         // parse and validate the harbor array of the corp
         val harborsJson = corp.getJSONArray(JsonKeys.HOME_HARBORS)
-        val parseCorpHarborsRes = parseCorpHarbors(harborsJson)
+        val parseCorpHarborsRes = parseCorpHarbors(harborsJson, id)
         val harbors = parseCorpHarborsRes.getOrElse { return Result.failure(it) }
 
         val garbageJson = corp.getJSONArray(JsonKeys.GARBAGE_TYPES)
@@ -165,42 +165,48 @@ class CorporationParser(private val jsonString: String, private var simulationDa
      * Helper method to parse and validate the array of harbors a corporation has.
      * @return result of basic validation
      */
-    private fun parseCorpHarbors(harborsJson: JSONArray): Result<Set<Tile>> {
+    private fun parseCorpHarbors(harborsJson: JSONArray, corpID: Int): Result<Set<Tile>> {
         val res = mutableSetOf<Tile>()
-        var exceptionNotAvoided = false
         for (harbor in harborsJson) {
             try {
                 val harborID = (harbor ?: return Result.failure(ParserException("JSON Harbor ID was null."))) as Int
                 // get tile of claimed harbor
-                val harborExists = simulationData.harborMap[harborID]
-                    ?: return Result.failure(ParserException("Harbor $harborID is not an actual harbor."))
-                val harborTileID = harborExists.location
-                val harborTile =
-                    oceanMap.getTileByID(harborTileID)
-                        .getOrElse {
-                            return Result.failure(ParserException("Harbor $harborID does not exist on a tile."))
-                        }
-                if (!simulationData.harborTiles.contains(harborTile)
-                ) {
+                val harborTile = checkHarbor(harborID)
+                    .getOrElse { return Result.failure(it) }
+                val corpsOfHarborFromID = simulationData.harborMap.getValue(harborID).corporations
+                if (corpID !in corpsOfHarborFromID) {
                     return Result.failure(
-                        ParserException("Harbor $harborTile is not a harbor.")
+                        ParserException("The harbor $harborID does not have $corpID this corp in it. ")
                     )
                 }
                 claimedHarbors.add(harborTile)
                 // adding harbor to currentInfo of corp
                 res.add(harborTile)
             } catch (_: ClassCastException) {
-                exceptionNotAvoided = true
+                return Result.failure(ParserException("Some harbor ID was not an Int."))
             }
         }
-        return if (exceptionNotAvoided) {
-            Result.failure(ParserException("Some harbor ID was not Int"))
-        } else {
-            Result.success(res)
-        }
+        checkHarborsMapForCorps()
+
+        return Result.success(res)
     }
 
-    /*private fun checkHarbor(harborID: Int): Result<Tile> {
+    /**
+     * Checks harbors to corp mappings
+     */
+    private fun checkHarborsMapForCorps(): Result<Unit> {
+        for (harbor in simulationData.harborMap.values) {
+            harbor.corporations.forEach { corporation ->
+                if (corporation !in corporationsById.keys) {
+                    return Result.failure(
+                        ParserException("For harbor ${harbor.id} $corporation was not an CROPS ID LIST.")
+                    )
+                }
+            }
+        }
+        return Result.success(Unit)
+    }
+    private fun checkHarbor(harborID: Int): Result<Tile> {
         // get tile of claimed harbor
         val harborExists = simulationData.harborMap[harborID]
             ?: return Result.failure(ParserException("Harbor $harborID is not an actual harbor."))
@@ -218,7 +224,7 @@ class CorporationParser(private val jsonString: String, private var simulationDa
             )
         }
         return Result.success(harborTile)
-    }*/
+    }
 
     /**
      * Helper method to parse and validate the array of ships a corporation has.

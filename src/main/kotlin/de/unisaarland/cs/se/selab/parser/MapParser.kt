@@ -28,6 +28,8 @@ class MapParser(private var simulationData: SimulationData) {
     private val tilesMap: MutableMap<Int, Tile> = mutableMapOf()
     private val tileCoordinates: MutableMap<Coordinate, Tile> = mutableMapOf()
     private val harborsMap: MutableMap<Int, Harbor> = mutableMapOf()
+    private val tileToHarbor = mutableMapOf<Tile, Harbor>()
+    private val harborToTile = mutableMapOf<Harbor, Tile>()
 
     /**
      * Parses the map from the JSON file.
@@ -47,10 +49,15 @@ class MapParser(private var simulationData: SimulationData) {
         val harbors = json.getJSONArray(JsonKeys.HARBORS)
         parseTiles(tiles).onFailure { return Result.failure(it) }
         parseHarbors(harbors).onFailure { return Result.failure(it) }
-        validateEachStationPresent()
+        validateEachStationPresent().onFailure { return Result.failure(it) }
+        createMaps()
         simulationData.tiles.putAll(tilesMap)
         simulationData.harborMap.putAll(harborsMap)
-        simulationData.oceanMap = OceanMap(tileCoordinates)
+        val oceanMap = OceanMap(tileCoordinates)
+        oceanMap.harborsMap.putAll(harborsMap)
+        oceanMap.tileToHarbor.putAll(tileToHarbor)
+        oceanMap.harborToTile.putAll(harborToTile)
+        simulationData.oceanMap = oceanMap
         return Result.success(Unit)
     }
 
@@ -87,10 +94,10 @@ class MapParser(private var simulationData: SimulationData) {
         harbors.forEach { harbor ->
             if (harbor is JSONObject) {
                 val harborID = harbor.getInt(JsonKeys.ID)
-                val harborObject = validateAndCreateHarbors(harbor, harborID).getOrElse { return Result.failure(it) }
-                if (harborObject.id in this.harborsMap.keys) {
+                if (harborID in this.harborsMap.keys) {
                     return Result.failure(ParserException("Harbor with id $harborID already exists."))
                 }
+                val harborObject = validateAndCreateHarbors(harbor, harborID).getOrElse { return Result.failure(it) }
                 // check if the tile id is already present
                 harborsMap[harborObject.id] = harborObject // add the tile to the map
             } else {
@@ -103,9 +110,9 @@ class MapParser(private var simulationData: SimulationData) {
 
     private fun validateAndCreateHarbors(harbor: JSONObject, harborID: Int): Result<Harbor> {
         // check if the keys are valid
-        /*if (!validateKeySetOfHarbor(harbor)) {
+        if (!validateKeySetOfHarbor(harbor)) {
             return Result.failure(ParserException("Invalid keys in harbor $harbor."))
-        }*/
+        }
         validateHarborWithTile(harbor).getOrElse { return Result.failure(it) }
         val harborCorporationIntIds = harbor.getJSONArray(JsonKeys.CORPORATIONS)
             .map { (it ?: error("Garbage type cannot be null")) as Int }
@@ -152,6 +159,14 @@ class MapParser(private var simulationData: SimulationData) {
         )
     }
 
+    private fun createMaps() {
+        for (harbor in harborsMap.values) {
+            val tile = tilesMap.getValue(harbor.id)
+            tileToHarbor[tile] = harbor
+            harborToTile[harbor] = tile
+        }
+    }
+
     private fun createShipyardStation(harbor: JSONObject): ShipyardStation {
         val repairCost = harbor.getJSONObject(JsonKeys.SHIPYARD_STATION).getInt(JsonKeys.REPAIR_COST)
         val shipCost = harbor.getJSONObject(JsonKeys.SHIPYARD_STATION).getInt(JsonKeys.SHIP_COST)
@@ -175,15 +190,15 @@ class MapParser(private var simulationData: SimulationData) {
         if (!tilesMap.containsKey(location)) {
             return Result.failure(ParserException("Harbor $harborID has an invalid location on tile $location."))
         }
-        val tileLoc = tilesMap[location]
-            ?: return Result.failure(ParserException("Harbor $harborID on tile $location which is null."))
-        if (tileLoc.type != TileType.SHORE) {
+        if (tilesMap.getValue(location).type != TileType.SHORE) {
             return Result.failure(ParserException("Harbor $harborID on tile $location which is not shore."))
         }
-        if (!tileLoc.harbor || tileLoc.harborID != harborID) {
+        if (!tilesMap.getValue(location).harbor) {
+            return Result.failure(ParserException("Harbor $harborID is on tile $location which has a false harbor."))
+        }
+        if (tilesMap.getValue(location).harborID != harborID) {
             return Result.failure(
-                ParserException
-                ("Harbor $harborID is on tile $location which has a harbor with a different ID or a false harbor.")
+                ParserException("Harbor $harborID is on tile $location which has a harbor with a different ID.")
             )
         }
         return Result.success(Unit)
@@ -259,7 +274,7 @@ class MapParser(private var simulationData: SimulationData) {
     /**
      *
      */
-    /*private fun validateKeySetOfHarbor(harbor: JSONObject): Boolean {
+    private fun validateKeySetOfHarbor(harbor: JSONObject): Boolean {
         val mandatoryKeys = setOf(
             JsonKeys.ID,
             JsonKeys.LOCATION,
@@ -311,7 +326,7 @@ class MapParser(private var simulationData: SimulationData) {
             }
         }
         return true
-    }*/
+    }
 
     /**
      * Validate the JSON key set of the tile.

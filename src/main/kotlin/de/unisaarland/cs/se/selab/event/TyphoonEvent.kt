@@ -1,12 +1,14 @@
 package de.unisaarland.cs.se.selab.event
 
-import de.unisaarland.cs.se.selab.Logger
+import de.unisaarland.cs.se.selab.Logger.printer
 import de.unisaarland.cs.se.selab.data.Garbage
 import de.unisaarland.cs.se.selab.data.OceanMap
 import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.data.Tile
 import de.unisaarland.cs.se.selab.enums.GarbageType
 import de.unisaarland.cs.se.selab.enums.RewardType
+import java.util.*
+
 const val ACCELERATION_DECREASE = 4
 const val MIN_VELOCITY = 40
 const val STRENGTH1 = 1
@@ -33,7 +35,7 @@ class TyphoonEvent(
                 tile ->
             affectedShips.addAll(oceanMap.getShipsOnTile(tile))
         }
-        Logger.logTyphoon(id, radius, location.id, affectedShips)
+        logTyphoon(id, radius, location.id, affectedShips)
         when (strength) {
             STRENGTH1 -> affectedShips.forEach { ship -> increaseFuelConsumption(ship) }
             STRENGTH2 -> affectedShips.forEach { ship ->
@@ -54,14 +56,26 @@ class TyphoonEvent(
         }
     }
 
+    /**
+     * Increases Fuel Consumption
+     */
     private fun increaseFuelConsumption(ship: Ship) {
         ship.fuelConsumption *= 2
     }
+
+    /**
+     * Destroy Telescope and Radios
+     */
     private fun destroyTelescopesAndRadios(ship: Ship) {
         if (RewardType.RADIO in ship.reward || RewardType.TELESCOPE in ship.reward) {
             ship.reward.removeAll(listOf(RewardType.TELESCOPE, RewardType.RADIO))
+            ship.visibilityRange = ship.visibilityRangeOriginal
         }
     }
+
+    /**
+     * Unload Garbage Ship
+     */
     private fun unloadGarbageShip(ship: Ship, oceanMap: OceanMap) {
         // So we will iterate through every garbage type in the ORDER PLASTIC, OIL, CHEMICALS
         for (garbageType in GarbageType.entries) {
@@ -86,11 +100,26 @@ class TyphoonEvent(
         }
     }
 
+    /**
+     * Damages the ship
+     */
     private fun damageShip(ship: Ship) {
         ship.acceleration = (ship.acceleration - ACCELERATION_DECREASE).coerceAtLeast(1)
         if (ship.velocity > MIN_VELOCITY) {
             ship.velocity = ship.velocity.coerceAtLeast(MIN_VELOCITY)
         }
         ship.isDamaged = true
+    }
+
+    /**
+     * Log event typhoon.
+     */
+    private fun logTyphoon(eventId: Int, radius: Int, tileID: Int, sortedShips: SortedSet<Ship>) {
+        val sortedShipsIDs = sortedShips.map { it.id }.joinToString(", ")
+        printer.println(
+            "Event: Typhoon $eventId at tile $tileID with radius $radius affected" +
+                " ships: $sortedShipsIDs."
+        )
+        printer.flush()
     }
 }

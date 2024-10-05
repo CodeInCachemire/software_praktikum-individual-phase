@@ -10,4 +10,8 @@ data class Harbor(
     val shipyardStation: ShipyardStation?,
     val refuelingStation: RefuelingStation?,
     val unloadingStation: UnloadingStation?
-)
+) {
+    val hasShipyardStation = shipyardStation != null
+    val hasRefuelingStation = refuelingStation != null
+    val hasUnloadingStation = unloadingStation != null
+}

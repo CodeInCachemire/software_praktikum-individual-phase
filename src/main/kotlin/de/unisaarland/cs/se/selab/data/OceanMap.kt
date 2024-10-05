@@ -15,6 +15,8 @@ data class OceanMap(
     val tileToShip = mutableMapOf<Tile, SortedSet<Ship>>()
     val shipToTile = mutableMapOf<Ship, Tile>()
     val tileToHarbor = mutableMapOf<Tile, Harbor>()
+    val harborToTile = mutableMapOf<Harbor, Tile>()
+    val harborsMap: MutableMap<Int, Harbor> = mutableMapOf()
 
     private var maxGarbageId = 0
 
