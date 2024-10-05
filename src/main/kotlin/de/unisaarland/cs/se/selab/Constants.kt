@@ -18,6 +18,6 @@ object Constants {
     const val MAX_DRIFT_INTENSITY = 10
     const val MIN_OIL_AMOUNT = 0
     const val MAX_OIL_AMOUNT = 1000
-    const val MIN_STRENGTH = 4
+    const val MIN_STRENGTH = 1
     const val MAX_STRENGTH = 4
 }
