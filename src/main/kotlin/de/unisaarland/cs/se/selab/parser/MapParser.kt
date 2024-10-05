@@ -47,7 +47,7 @@ class MapParser(private var simulationData: SimulationData) {
         val harbors = json.getJSONArray(JsonKeys.HARBORS)
         parseTiles(tiles).onFailure { return Result.failure(it) }
         parseHarbors(harbors).onFailure { return Result.failure(it) }
-        validateEachStationPresent().onFailure { return Result.failure(it) }
+        // validateEachStationPresent().onFailure { return Result.failure(it) }
         simulationData.tiles.putAll(tilesMap)
         simulationData.harborMap.putAll(harborsMap)
         simulationData.oceanMap = OceanMap(tileCoordinates)
@@ -189,7 +189,7 @@ class MapParser(private var simulationData: SimulationData) {
         return Result.success(Unit)
     }
 
-    private fun validateEachStationPresent(): Result<Unit> {
+    /*private fun validateEachStationPresent(): Result<Unit> {
         val shipYardNum = harborsMap.values.fold(
             0
         ) { acc, harbor -> if (harbor.shipyardStation != null) acc + 1 else acc }
@@ -205,7 +205,7 @@ class MapParser(private var simulationData: SimulationData) {
             )
         }
         return Result.success(Unit)
-    }
+    }*/
 
     private fun validateAndCreateTiles(tile: JSONObject): Result<Tile> {
         // check if the keys are valid
