@@ -53,6 +53,8 @@ class Simulation(
                 shipHandler.cooperationPhase(corporation)
                 shipHandler.refuelingPhase(corporation)
                 shipHandler.unloadingPhase(corporation)
+                shipHandler.repairingPhase(corporation)
+                // shipHandler.purchasingPhase(corporation,currentTick)
                 Logger.logFinishAction(corporation.id)
             }
 

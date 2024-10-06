@@ -40,7 +40,7 @@ open class Ship(
     val visibilityRangeOriginal = visibilityRange
     var returnToRefuel = false
     var returnToUnload = false
-    var tyhPhooned = false
+    var returnToRepair = false
 
     /**
      * Accelerates the ship and increases its current velocity
@@ -85,6 +85,13 @@ open class Ship(
      */
     fun isUnloading(): Boolean {
         return waitingAtHarbor && waitingAtAUnloadingStation && behaviour == Behaviour.UNLOADING
+    }
+
+    /**
+     * Returns if the ship is repairing during this tick
+     */
+    fun isRepairing(): Boolean {
+        return waitingAtHarbor && waitingAtAShipyard && behaviour == Behaviour.REPAIRING
     }
 
     /**

@@ -34,7 +34,8 @@ class MovementHandler(
             moveShip(ship, shipTile)
 
             if (ship.behaviour != Behaviour.REFUELING &&
-                ship.behaviour != Behaviour.UNLOADING // TODO() CHECK THIS AGAIN
+                ship.behaviour != Behaviour.UNLOADING && // TODO() CHECK THIS AGAIN
+                ship.behaviour != Behaviour.REPAIRING
             ) {
                 ship.waitingAtHarbor = false // TODO() we set to false here
                 // ship.waitingAtAUnloadingStation = false
@@ -47,7 +48,9 @@ class MovementHandler(
             if (ship.behaviour != Behaviour.UNLOADING) {
                 ship.waitingAtAUnloadingStation = false
             }
-
+            if (ship.behaviour != Behaviour.REPAIRING) {
+                ship.waitingAtAShipyard = false
+            }
             ship.task?.update(ship, oceanMap, movementPhase = true)
         }
     }
@@ -72,6 +75,7 @@ class MovementHandler(
     private fun moveShip(ship: Ship, shipTile: Tile) {
         val onRestriction = shipTile.restricted
         val needsToRefuel = ship.behaviour == Behaviour.REFUELING
+        val needsToRepair = ship.isDamaged
         val hasTask = ship.task != null
         val needsToUnload = ship.garbageCapacity.any { it.value == 0 }
 
@@ -80,6 +84,7 @@ class MovementHandler(
         when { // TODO()
             onRestriction -> escapeRestriction(ship)
             needsToRefuel -> moveToRefuel(ship)
+            needsToRepair -> moveToRepair(ship)
             hasTask -> moveToTask(ship)
             needsToUnload -> moveToUnload(ship)
             else -> moveShipDefault(ship)
@@ -181,39 +186,21 @@ class MovementHandler(
         }
         moveToUnloadHarbor(ship)
     }
-    /*
+
     /**
-     * Moves the ship towards the closest reachable harbour.
+     * Moves the ship towards the closest reachable harbour and sets the behaviour to repairing.
+     * If the ship has a task, it immediately fails and is removed from the ship.
      */
-    private fun moveToHarbour(ship: Ship) {
-        val shipTile = oceanMap.getShipTile(ship)
-        val path = pathFinder.getShortestPathToTile(shipTile, ship.corporation.harbors)
-        moveAlongPath(ship, path)
-    }*/
-    /*
-    /**
-     * Moves the ship towards the closest reachable harbour.
-     */
-    private fun moveToHarbourREAL(ship: Ship) {
-        val shipTile = oceanMap.getShipTile(ship)
-        val moveToRefuelHarbor = ship.behaviour == Behaviour.REFUELING
-        val moveToUnloadHarbor = ship.behaviour == Behaviour.UNLOADING
-        val moveToRepair = ship.behaviour == Behaviour.REPAIRING
-        when (ship.behaviour){ //TODO()
-            Behaviour.REFUELING -> {
-                moveToRefuelHarbor(ship,shipTile)
-            }
-            Behaviour.UNLOADING -> moveToRefuel(ship)
-            isDamaged -> moveToRepair(ship)
-            refuelingShipPresent -> moveToNowhere(ship)
-            hasTask -> moveToTask(ship)
-            needsToUnload -> moveToUnload(ship)
-            else -> moveShipDefault(ship)
+    private fun moveToRepair(ship: Ship) {
+        ship.behaviour = Behaviour.REPAIRING
+        ship.task = null
+        if (ship.isRepairing()) {
+            ship.returnToRepair = false
+        } else {
+            ship.returnToRepair = true
         }
-
-
-        moveAlongPath(ship, path)
-    }*/
+        moveToRepairHarbor(ship)
+    }
 
     /**
      * Move to refuel harbor
@@ -257,6 +244,16 @@ class MovementHandler(
         }
         /*val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, garbageType)
         val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)*/
+        moveAlongPath(ship, path)
+    }
+
+    /**
+     * Move to shipyard to Repair
+     */
+    private fun moveToRepairHarbor(ship: Ship) {
+        val shipTile = oceanMap.getShipTile(ship)
+        val tilesWithRepairingStation = oceanMap.getRepairingStationHarborTiles()
+        val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithRepairingStation)
         moveAlongPath(ship, path)
     }
 

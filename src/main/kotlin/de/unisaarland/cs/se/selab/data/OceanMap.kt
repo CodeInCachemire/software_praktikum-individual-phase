@@ -171,6 +171,13 @@ data class OceanMap(
     }
 
     /**
+     * Gets the maximum garbage id.
+     */
+    fun incMaxGarbageID() {
+        maxGarbageId += 1
+    }
+
+    /**
      * Get all refueling station harbors that are active
      */
     private fun getRefuelingStationHarbors(): Set<Harbor> {
@@ -209,6 +216,25 @@ data class OceanMap(
      */
     fun getUnloadingHarborTiles(corpId: Int, garbageType: GarbageType): Set<Tile> {
         return getUnloadingStationHarbors(corpId, garbageType).map { harborToTile.getValue(it) }.toSet()
+    }
+
+    /**
+     * Get all refueling station harbors that are active
+     */
+    private fun getRepairingStationHarbors(): Set<Harbor> {
+        return harborsMap.values
+            .filter { it.shipyardStation != null }
+            .toSortedSet(compareBy { it.id })
+            /*
+            .toSortedSet(compareBy { it.id })
+            .minOf { it }*/
+    }
+
+    /**
+     * Get all refueling station harbor tiles
+     */
+    fun getRepairingStationHarborTiles(): Set<Tile> {
+        return getRepairingStationHarbors().map { harborToTile.getValue(it) }.toSet()
     }
 
     /**

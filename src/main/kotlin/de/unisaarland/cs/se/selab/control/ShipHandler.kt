@@ -220,7 +220,7 @@ class ShipHandler(
     /**
      * It checks if we can unload in next tick or not and sets behavior.
      */
-    fun checkUnloadAndSetBehavior(ship: Ship, harbor: Harbor) {
+    private fun checkUnloadAndSetBehavior(ship: Ship, harbor: Harbor) {
         if (harbor.unloadingStation != null) {
             val unloadableTypes = harbor.unloadingStation.garbageTypes
             var unloadAllowed = false
@@ -305,37 +305,67 @@ class ShipHandler(
                 val garbageTypeCapacity = ship.maxGarbageCapacity.getValue(garbageType)
                 ship.garbageCapacity[garbageType] = garbageTypeCapacity
                 val creditsEarned = garbageTypeCapacity * harborUnloadingStation.unloadReturn
+                ship.corporation.credits += creditsEarned
                 Logger.logUnload(ship.id, garbageTypeCapacity, garbageType, harborTile.id, creditsEarned)
             }
         }
         ship.behaviour = Behaviour.DEFAULT
         ship.waitingAtAUnloadingStation = false
     }
-    /*
+
     /**
      * Handles the repairing phase for the given corporation.
      */
     fun repairingPhase(corporation: Corporation) {
-        Logger.logCorpCollectGarbage(corporation.id)
         for (ship in corporation.ships) {
-            if (ship.canCollect()) {
+            val shipTile = oceanMap.getShipTile(ship)
+            val shipOnRepairTile = shipTile in oceanMap.getRepairingStationHarborTiles()
+            if ((ship.returnToRepair || ship.waitingAtAShipyard) && shipOnRepairTile) {
                 repairShip(ship)
             }
         }
     }
 
     /**
-     * Unload the given ship.
+     * Refuel the given ship.
      */
-    private fun unloadShip(ship: Ship) {
+    private fun repairShip(ship: Ship) {
         val shipTile = oceanMap.getShipTile(ship)
         val harbor = oceanMap.tileToHarbor.getValue(shipTile)
+        if (harbor.shipyardStation != null) {
             if (ship.returnToRepair) {
                 ship.returnToRepair = false
-                ship.waitingAtAShipyard = true
+                // MOGGER METHODs
+                val cost = harbor.shipyardStation.repairCost
+                if (ship.corporation.credits >= cost) {
+                    ship.waitingAtAShipyard = true
+                    Logger.logDamageRepairStart(ship.id, harbor.id, cost)
+                }
             } else if (ship.isRepairing()) {
-
+                val cost = harbor.shipyardStation.repairCost
+                ship.acceleration = ship.accelerationOriginal
+                ship.maxVelocity = ship.maxVelocityOriginal
+                ship.corporation.credits -= cost
+                ship.isDamaged = false
+                Logger.logDamageRepairFinish(ship.id)
+                ship.waitingAtAShipyard = false
+                ship.behaviour = Behaviour.DEFAULT
+                /*
+                if (!ship.garbageCapacity.any { it.value == 0 }) {
+                    return
+                }
+                val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys.sortedBy { it.ordinal }
+                if (needsToUnload.isEmpty()) {
+                    return
+                }
+                if (shipTile in oceanMap.getUnloadingHarborTiles(ship.corporation.id, needsToUnload.first())) {
+                    checkUnloadAndSetBehavior(
+                        ship,
+                        harbor
+                    )
+                }
+                */
             }
-
-    }*/
+        }
+    }
 }

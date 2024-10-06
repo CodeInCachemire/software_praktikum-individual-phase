@@ -9,5 +9,6 @@ enum class Behaviour {
     UNLOADING,
     DOING_TASK,
     ESCAPING,
-    EXPLORING
+    EXPLORING,
+    REPAIRING
 }

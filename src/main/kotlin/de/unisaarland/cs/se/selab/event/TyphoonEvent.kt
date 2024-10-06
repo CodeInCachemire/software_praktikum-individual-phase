@@ -118,6 +118,8 @@ class TyphoonEvent(
             ) {
                 oceanMap.addGarbage(garbageNew, oceanMap.getShipTile(ship))
                 createdGarbage.add(garbageNew)
+            } else {
+                oceanMap.incMaxGarbageID()
             }
         }
     }
