@@ -248,10 +248,26 @@ class ShipHandler(
     fun unloadingPhase(corporation: Corporation) {
         for (ship in corporation.ships) {
             val shipTile = oceanMap.getShipTile(ship)
-            if (ship.garbageCapacity.any { it.value == 0 }) {
-                val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys.sortedBy { it.ordinal }
-                val shipOnUnloadTile = shipTile in
-                    oceanMap.getUnloadingHarborTiles(ship.corporation.id, needsToUnload.first())
+            val harbor = oceanMap.tileToHarbor[shipTile] ?: continue
+            val unloadingStation = harbor.unloadingStation ?: continue
+            if (shipTile in corporation.harbors) {
+                callUnload(ship, unloadingStation)
+            }
+        }
+    }
+
+    /**
+     * Fun check harbor null and has unloadingStation
+     */
+    private fun callUnload(ship: Ship, unloadingStation: UnloadingStation) {
+        if (ship.garbageCapacity.any { it.value == 0 }) {
+            val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys.sortedBy { it.ordinal }
+
+            /*= shipTile in
+                oceanMap.getUnloadingHarborTiles(ship.corporation.id, needsToUnload.first())*/
+            if (needsToUnload.isNotEmpty()) {
+                val garbageToCheck = needsToUnload.first()
+                val shipOnUnloadTile = unloadingStation.garbageTypes.contains(garbageToCheck)
                 if ((ship.returnToUnload || ship.waitingAtAUnloadingStation) && shipOnUnloadTile) {
                     unloadShip(ship)
                 }
@@ -266,15 +282,11 @@ class ShipHandler(
         val shipTile = oceanMap.getShipTile(ship)
         val harbor = oceanMap.tileToHarbor.getValue(shipTile)
         if (harbor.unloadingStation != null) {
-            val canUnloadHere = ship.garbageCapacity
-                .any { it.value == 0 && it.key in harbor.unloadingStation.garbageTypes }
-            if (canUnloadHere) {
-                if (ship.returnToUnload) {
-                    ship.returnToUnload = false
-                    ship.waitingAtAUnloadingStation = true
-                } else if (ship.isUnloading()) {
-                    unloadGarbageAtStation(ship, harbor.unloadingStation)
-                }
+            if (ship.returnToUnload) {
+                ship.returnToUnload = false
+                ship.waitingAtAUnloadingStation = true
+            } else if (ship.isUnloading()) {
+                unloadGarbageAtStation(ship, harbor.unloadingStation)
             }
         }
     }
@@ -284,6 +296,8 @@ class ShipHandler(
      */
     private fun unloadGarbageAtStation(ship: Ship, harborUnloadingStation: UnloadingStation) {
         val harborTile = oceanMap.getShipTile(ship)
+        /*val filterGarbagesWeCanUnload = ship.garbageCapacity
+            .filter { it.value == 0 && it.key in harborUnloadingStation.garbageTypes }.keys.sortedBy { it.ordinal }*/
         val filterGarbagesWeCanUnload = ship.garbageCapacity
             .filter { it.value == 0 && it.key in harborUnloadingStation.garbageTypes }.keys.sortedBy { it.ordinal }
         for (garbageType in filterGarbagesWeCanUnload) {
@@ -297,4 +311,31 @@ class ShipHandler(
         ship.behaviour = Behaviour.DEFAULT
         ship.waitingAtAUnloadingStation = false
     }
+    /*
+    /**
+     * Handles the repairing phase for the given corporation.
+     */
+    fun repairingPhase(corporation: Corporation) {
+        Logger.logCorpCollectGarbage(corporation.id)
+        for (ship in corporation.ships) {
+            if (ship.canCollect()) {
+                repairShip(ship)
+            }
+        }
+    }
+
+    /**
+     * Unload the given ship.
+     */
+    private fun unloadShip(ship: Ship) {
+        val shipTile = oceanMap.getShipTile(ship)
+        val harbor = oceanMap.tileToHarbor.getValue(shipTile)
+            if (ship.returnToRepair) {
+                ship.returnToRepair = false
+                ship.waitingAtAShipyard = true
+            } else if (ship.isRepairing()) {
+
+            }
+
+    }*/
 }

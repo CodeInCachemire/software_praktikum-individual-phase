@@ -244,8 +244,19 @@ class MovementHandler(
     private fun moveToUnloadHarbor(ship: Ship) { // //TODO()))
         val shipTile = oceanMap.getShipTile(ship)
         val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys.sortedBy { it.ordinal }
-        val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, needsToUnload.first())
-        val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)
+        var path = emptyList<Tile>()
+        // WE only move if we can find a path to it
+        for (garbageType in needsToUnload) {
+            val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, garbageType)
+            if (tilesWithUnloadingStation.isNotEmpty()) {
+                path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)
+                if (path.isNotEmpty()) {
+                    break
+                }
+            }
+        }
+        /*val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, garbageType)
+        val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)*/
         moveAlongPath(ship, path)
     }
 

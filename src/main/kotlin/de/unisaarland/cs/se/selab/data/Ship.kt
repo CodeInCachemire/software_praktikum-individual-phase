@@ -15,14 +15,14 @@ open class Ship(
     val id: Int,
     val type: ShipType,
     val corporation: Corporation,
-    val maxVelocity: Int,
+    var maxVelocity: Int,
     var acceleration: Int,
     val maxFuel: Int,
     var fuelConsumption: Int,
     var visibilityRange: Int,
     val maxGarbageCapacity: MutableMap<GarbageType, Int>
 ) : Comparable<Ship> {
-    val fuelConsumptionPerTile = fuelConsumption * Constants.TILE_DISTANCE
+    var fuelConsumptionPerTile = fuelConsumption * Constants.TILE_DISTANCE
     var velocity = 0
     val reward = mutableListOf<RewardType>()
     var fuel = maxFuel
@@ -40,6 +40,7 @@ open class Ship(
     val visibilityRangeOriginal = visibilityRange
     var returnToRefuel = false
     var returnToUnload = false
+    var tyhPhooned = false
 
     /**
      * Accelerates the ship and increases its current velocity

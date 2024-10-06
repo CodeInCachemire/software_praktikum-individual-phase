@@ -1,5 +1,6 @@
 package de.unisaarland.cs.se.selab.event
 
+import de.unisaarland.cs.se.selab.Constants
 import de.unisaarland.cs.se.selab.Logger.logEvent
 import de.unisaarland.cs.se.selab.Logger.printer
 import de.unisaarland.cs.se.selab.data.Garbage
@@ -8,6 +9,7 @@ import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.data.Tile
 import de.unisaarland.cs.se.selab.enums.GarbageType
 import de.unisaarland.cs.se.selab.enums.RewardType
+import de.unisaarland.cs.se.selab.enums.TileType
 import de.unisaarland.cs.se.selab.parser.JsonKeys
 import java.util.*
 
@@ -64,6 +66,7 @@ class TyphoonEvent(
      */
     private fun increaseFuelConsumption(ship: Ship) {
         ship.fuelConsumption *= 2
+        ship.fuelConsumptionPerTile = ship.fuelConsumption * Constants.TILE_DISTANCE
     }
 
     /**
@@ -85,20 +88,36 @@ class TyphoonEvent(
             // IF a garbage type is in the ship's garbage capacity type then we continue
             if (garbageType in ship.garbageCapacity.keys) {
                 // we first get the maxcapacity for that garbage capacity
-                val garbageTypeCapacity = ship.maxGarbageCapacity.getValue(garbageType)
+                val garbageTypeCapacityMax = ship.maxGarbageCapacity.getValue(garbageType)
                 val currentGarbageCapacity = ship.garbageCapacity.getValue(garbageType)
-                val amountCollectedForType = garbageTypeCapacity - currentGarbageCapacity
-                ship.garbageCapacity[garbageType] = garbageTypeCapacity
-                if (amountCollectedForType > 0) {
-                    val garbageNew =
-                        Garbage(
-                            oceanMap.getMaxGarbageId() + 1,
-                            garbageType,
-                            amountCollectedForType
-                        )
-                    oceanMap.addGarbage(garbageNew, oceanMap.getShipTile(ship))
-                    createdGarbage.add(garbageNew)
-                }
+                val amountCollectedForType = garbageTypeCapacityMax - currentGarbageCapacity
+                ship.garbageCapacity[garbageType] = garbageTypeCapacityMax
+                unloadGarbageTyphoon(garbageType, amountCollectedForType, oceanMap, ship)
+            }
+        }
+    }
+
+    /**
+     * Create And Unload Garbage
+     */
+    private fun unloadGarbageTyphoon(
+        garbageType: GarbageType,
+        amountCollectedForType: Int,
+        oceanMap: OceanMap,
+        ship: Ship
+    ) {
+        if (amountCollectedForType > 0) {
+            val garbageNew =
+                Garbage(
+                    oceanMap.getMaxGarbageId() + 1,
+                    garbageType,
+                    amountCollectedForType
+                )
+            if (garbageType != GarbageType.CHEMICALS &&
+                oceanMap.getShipTile(ship).type != TileType.DEEP_OCEAN
+            ) {
+                oceanMap.addGarbage(garbageNew, oceanMap.getShipTile(ship))
+                createdGarbage.add(garbageNew)
             }
         }
     }
@@ -108,8 +127,8 @@ class TyphoonEvent(
      */
     private fun damageShip(ship: Ship) {
         ship.acceleration = (ship.acceleration - ACCELERATION_DECREASE).coerceAtLeast(1)
-        if (ship.velocity > MIN_VELOCITY) {
-            ship.velocity = ship.velocity.coerceAtLeast(MIN_VELOCITY)
+        if (ship.maxVelocity > MIN_VELOCITY) {
+            ship.maxVelocity = MIN_VELOCITY
         }
         ship.isDamaged = true
     }
