@@ -38,6 +38,8 @@ open class Ship(
     val accelerationOriginal = acceleration
     var beingRefueledByShip = false
     val visibilityRangeOriginal = visibilityRange
+    var returnToRefuel = false
+    var returnToUnload = false
 
     /**
      * Accelerates the ship and increases its current velocity
@@ -74,14 +76,14 @@ open class Ship(
      * Returns if the ship is refueling during this tick
      */
     fun isRefueling(): Boolean {
-        return waitingAtHarbor && behaviour == Behaviour.REFUELING
+        return waitingAtHarbor && waitingAtARefuelingStation && behaviour == Behaviour.REFUELING
     }
 
     /**
      * Returns if the ship is unloading during this tick
      */
     fun isUnloading(): Boolean {
-        return waitingAtHarbor && behaviour == Behaviour.UNLOADING
+        return waitingAtHarbor && waitingAtAUnloadingStation && behaviour == Behaviour.UNLOADING
     }
 
     /**

@@ -26,21 +26,45 @@ class MovementHandler(
         Logger.logStartMove(corporation.id)
         for (ship in corporation.ships) {
             val shipTile = oceanMap.getShipTile(ship)
-            if (shipTile in ship.corporation.harbors) {
-                ship.waitingAtHarbor = true
+            if (shipTile in oceanMap.harborTiles) { // ////////THIS WILL CHANGE MUST CHANGE TO CORRECT HARBOR
+                // checkWhichHarbors(ship, shipTile) // if set to true then we execute in this phase
+                ship.waitingAtHarbor = true // TODO() CHECK THIS AGAIN
             }
             ship.accelerate()
             moveShip(ship, shipTile)
 
             if (ship.behaviour != Behaviour.REFUELING &&
-                ship.behaviour != Behaviour.UNLOADING
+                ship.behaviour != Behaviour.UNLOADING // TODO() CHECK THIS AGAIN
             ) {
-                ship.waitingAtHarbor = false
+                ship.waitingAtHarbor = false // TODO() we set to false here
+                // ship.waitingAtAUnloadingStation = false
+                // ship.waitingAtAShipyard = false
+                // ship.waitingAtAShipyard = false
+            }
+            if (ship.behaviour != Behaviour.REFUELING) {
+                ship.waitingAtARefuelingStation = false
+            }
+            if (ship.behaviour != Behaviour.UNLOADING) {
+                ship.waitingAtAUnloadingStation = false
             }
 
             ship.task?.update(ship, oceanMap, movementPhase = true)
         }
     }
+    /*
+    /**
+     * Check Which harbors you are at
+     */
+    private fun checkWhichHarbors(ship: Ship, shipTile: Tile) {
+        val harbor = oceanMap.tileToHarbor[shipTile]
+        if (harbor != null) {
+            ship.waitingAtAShipyard = harbor.hasShipyardStation
+            ship.waitingAtARefuelingStation = harbor.hasRefuelingStation
+            if (ship.corporation.id in harbor.corporations) {
+                ship.waitingAtAUnloadingStation = harbor.hasUnloadingStation
+            }
+        }
+    }*/
 
     /**
      * Determines the behaviour and moves the ship for this tick.
@@ -53,7 +77,7 @@ class MovementHandler(
 
         // Conditions are prioritized top to bottom,
         // with higher priority cases listed first.
-        when {
+        when { // TODO()
             onRestriction -> escapeRestriction(ship)
             needsToRefuel -> moveToRefuel(ship)
             hasTask -> moveToTask(ship)
@@ -64,9 +88,10 @@ class MovementHandler(
 
     /**
      * Moves the ship along the path by determining how far it can travel
-     * and what the intermediate destination would be. Redirects to a harbor if refueling is needed.
+     * and what the intermediate destination would be.
      * Also logs the ship movement and adjusts velocity if the destination is reached or no path is found.
      */
+    // Redirects to a harbor if refueling is needed.
     private fun moveAlongPath(ship: Ship, path: List<Tile>) {
         if (path.isEmpty()) {
             ship.velocity = 0
@@ -85,27 +110,33 @@ class MovementHandler(
         val fuelConsumed = distance * ship.fuelConsumptionPerTile
         val fuelNextTick = ship.fuel - fuelConsumed
         val reachableDistance = ship.getDistanceWithFuel(fuelNextTick)
-
+        val refuelingHarbors = oceanMap.getRefuelingStationHarborTiles()
         // If we are not either on the way to refueling or escaping,
         // then we have to check if we can make it back from the intermediate destination
         // to the harbor in the next tick and if not we will go refueling instead.
         if (ship.behaviour != Behaviour.REFUELING &&
-            ship.behaviour != Behaviour.ESCAPING &&
+            ship.behaviour != Behaviour.ESCAPING && // YOU WOULD ADD damaged condition here so if damaged return
             !pathFinder.isReachableWithinDistance(
                 intermediateDestination,
-                ship.corporation.harbors,
+                // ship.corporation.harbors,
+                // TODO() THIS SHOULD BE LIST OF REFUELING HARBORS, and then we should move by lowest harbor ID
+                refuelingHarbors,
                 reachableDistance
             )
         ) {
             return moveToRefuel(ship)
         }
-
+        // Moves a ship simply
         if (distance > 0) {
             ship.fuel = fuelNextTick
             oceanMap.moveShip(ship, intermediateDestination)
             Logger.logShipMove(ship.id, ship.velocity, intermediateDestination.id)
+            // val reachedDestination = intermediateDestination == path.lastOrNull()
+            /*if(reachedDestination) {
+                val shipTile = oceanMap.getShipTile(ship)
+                val harbor = oceanMap.tileToHarbor[shipTile]
+            }*/
         }
-
         val reachedDestination = intermediateDestination == path.lastOrNull()
         if (reachedDestination && ship.behaviour != Behaviour.EXPLORING) {
             ship.velocity = 0
@@ -129,7 +160,13 @@ class MovementHandler(
     private fun moveToRefuel(ship: Ship) {
         ship.behaviour = Behaviour.REFUELING
         ship.task = null
-        moveToHarbour(ship)
+        if (ship.isRefueling()) {
+            ship.returnToRefuel = false
+        } else {
+            ship.returnToRefuel = true
+        }
+
+        moveToRefuelHarbor(ship)
     }
 
     /**
@@ -137,15 +174,78 @@ class MovementHandler(
      */
     private fun moveToUnload(ship: Ship) {
         ship.behaviour = Behaviour.UNLOADING
-        moveToHarbour(ship)
+        if (ship.isUnloading()) {
+            ship.returnToUnload = false
+        } else {
+            ship.returnToUnload = true
+        }
+        moveToUnloadHarbor(ship)
     }
-
+    /*
     /**
      * Moves the ship towards the closest reachable harbour.
      */
     private fun moveToHarbour(ship: Ship) {
         val shipTile = oceanMap.getShipTile(ship)
         val path = pathFinder.getShortestPathToTile(shipTile, ship.corporation.harbors)
+        moveAlongPath(ship, path)
+    }*/
+    /*
+    /**
+     * Moves the ship towards the closest reachable harbour.
+     */
+    private fun moveToHarbourREAL(ship: Ship) {
+        val shipTile = oceanMap.getShipTile(ship)
+        val moveToRefuelHarbor = ship.behaviour == Behaviour.REFUELING
+        val moveToUnloadHarbor = ship.behaviour == Behaviour.UNLOADING
+        val moveToRepair = ship.behaviour == Behaviour.REPAIRING
+        when (ship.behaviour){ //TODO()
+            Behaviour.REFUELING -> {
+                moveToRefuelHarbor(ship,shipTile)
+            }
+            Behaviour.UNLOADING -> moveToRefuel(ship)
+            isDamaged -> moveToRepair(ship)
+            refuelingShipPresent -> moveToNowhere(ship)
+            hasTask -> moveToTask(ship)
+            needsToUnload -> moveToUnload(ship)
+            else -> moveShipDefault(ship)
+        }
+
+
+        moveAlongPath(ship, path)
+    }*/
+
+    /**
+     * Move to refuel harbor
+     */
+    private fun moveToRefuelHarbor(ship: Ship) {
+        val shipTile = oceanMap.getShipTile(ship)
+        /*if(refuelingShipPresentOnTile(ship,shipTile))
+            return*/
+        val tilesWithRefuelingStation = oceanMap.getRefuelingStationHarborTiles()
+        val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithRefuelingStation)
+        moveAlongPath(ship, path)
+    }
+    /*
+    /**
+     * Refueling Ship Is Present
+     */
+    private fun refuelingShipPresentOnTile(ship: Ship,shipTile: Tile):Boolean {
+        val shipsOnTile = oceanMap.getShipsOnTile(shipTile)
+        val shipFuelLess = ship.fuel < (0.5 * ship.maxFuel)
+        val refuelingShipExists = shipsOnTile.filter { it.type == ShipType.REFUELING && it.id != ship.id }
+        val shipCanRefuel = refuelingShipExists.any {!(it as RefuelingShip).refuelingShipCurrently}
+        return shipFuelLess && shipCanRefuel
+    }*/
+
+    /**
+     * Move to unload harbor
+     */
+    private fun moveToUnloadHarbor(ship: Ship) { // //TODO()))
+        val shipTile = oceanMap.getShipTile(ship)
+        val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys.sortedBy { it.ordinal }
+        val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, needsToUnload.first())
+        val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)
         moveAlongPath(ship, path)
     }
 

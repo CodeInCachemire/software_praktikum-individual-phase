@@ -3,8 +3,10 @@ package de.unisaarland.cs.se.selab.control
 import de.unisaarland.cs.se.selab.Logger
 import de.unisaarland.cs.se.selab.data.Corporation
 import de.unisaarland.cs.se.selab.data.Garbage
+import de.unisaarland.cs.se.selab.data.Harbor
 import de.unisaarland.cs.se.selab.data.OceanMap
 import de.unisaarland.cs.se.selab.data.Ship
+import de.unisaarland.cs.se.selab.data.UnloadingStation
 import de.unisaarland.cs.se.selab.enums.Behaviour
 import de.unisaarland.cs.se.selab.enums.GarbageType
 import de.unisaarland.cs.se.selab.task.CooperationTask
@@ -168,7 +170,11 @@ class ShipHandler(
     fun refuelingPhase(corporation: Corporation) {
         Logger.logRefuelStart(corporation.id)
         for (ship in corporation.ships) {
-            refuelShip(ship)
+            val shipTile = oceanMap.getShipTile(ship)
+            val shipOnRefuelTile = shipTile in oceanMap.getRefuelingStationHarborTiles()
+            if ((ship.returnToRefuel || ship.waitingAtARefuelingStation) && shipOnRefuelTile) {
+                refuelShip(ship)
+            }
         }
     }
 
@@ -177,13 +183,58 @@ class ShipHandler(
      */
     private fun refuelShip(ship: Ship) {
         val shipTile = oceanMap.getShipTile(ship)
-        if (ship.isRefueling()) {
-            ship.fuel = ship.maxFuel
-            Logger.logRefueling(ship.id, shipTile.id)
-            ship.waitingAtHarbor = false
-            if (ship.garbageCapacity.any { it.value == 0 }) {
+        val harbor = oceanMap.tileToHarbor.getValue(shipTile)
+        if (harbor.refuelingStation != null) {
+            if (ship.returnToRefuel) {
+                ship.returnToRefuel = false
+                // MOGGER METHODs
+                val cost = harbor.refuelingStation.refuelCost
+                if (ship.corporation.credits >= cost) {
+                    ship.waitingAtARefuelingStation = true
+                    Logger.logRefuelingShip(ship.id, harbor.id, cost)
+                } else {
+                    Logger.logRefuelingFail(ship.id, harbor.id)
+                }
+            } else if (ship.isRefueling()) {
+                val cost = harbor.refuelingStation.refuelCost
+                ship.fuel = ship.maxFuel
+                ship.corporation.credits -= cost
+                Logger.logRefuelingFinished(ship.id, harbor.id)
+                harbor.refuelingStation.incCount()
+                ship.waitingAtARefuelingStation = false
+                ship.behaviour = Behaviour.DEFAULT
+                if (!ship.garbageCapacity.any { it.value == 0 }) {
+                    return
+                }
+                val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys.sortedBy { it.ordinal }
+                if (shipTile in oceanMap.getUnloadingHarborTiles(ship.corporation.id, needsToUnload.first())) {
+                    checkUnloadAndSetBehavior(
+                        ship,
+                        harbor
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * It checks if we can unload in next tick or not and sets behavior.
+     */
+    fun checkUnloadAndSetBehavior(ship: Ship, harbor: Harbor) {
+        if (harbor.unloadingStation != null) {
+            val unloadableTypes = harbor.unloadingStation.garbageTypes
+            var unloadAllowed = false
+            for ((garbageType, amount) in ship.garbageCapacity) {
+                if (amount == 0 && garbageType in unloadableTypes) {
+                    unloadAllowed = true
+                    break
+                }
+            }
+            if (unloadAllowed) {
+                ship.garbageCapacity.any { it.value == 0 }
                 // If we have a full garbage container,
                 // go unloading in the next tick.
+                ship.waitingAtAUnloadingStation = true
                 ship.behaviour = Behaviour.UNLOADING
             } else {
                 ship.behaviour = Behaviour.DEFAULT
@@ -196,7 +247,15 @@ class ShipHandler(
      */
     fun unloadingPhase(corporation: Corporation) {
         for (ship in corporation.ships) {
-            unloadShip(ship)
+            val shipTile = oceanMap.getShipTile(ship)
+            if (ship.garbageCapacity.any { it.value == 0 }) {
+                val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys.sortedBy { it.ordinal }
+                val shipOnUnloadTile = shipTile in
+                    oceanMap.getUnloadingHarborTiles(ship.corporation.id, needsToUnload.first())
+                if ((ship.returnToUnload || ship.waitingAtAUnloadingStation) && shipOnUnloadTile) {
+                    unloadShip(ship)
+                }
+            }
         }
     }
 
@@ -204,18 +263,38 @@ class ShipHandler(
      * Unload the given ship.
      */
     private fun unloadShip(ship: Ship) {
-        val harbour = oceanMap.getShipTile(ship)
-
-        if (ship.isUnloading()) {
-            for (garbageType in GarbageType.entries) {
-                if (ship.garbageCapacity[garbageType] == 0) {
-                    val garbageTypeCapacity = ship.maxGarbageCapacity.getValue(garbageType)
-                    ship.garbageCapacity[garbageType] = garbageTypeCapacity
-                    Logger.logUnload(ship.id, garbageTypeCapacity, garbageType, harbour.id)
+        val shipTile = oceanMap.getShipTile(ship)
+        val harbor = oceanMap.tileToHarbor.getValue(shipTile)
+        if (harbor.unloadingStation != null) {
+            val canUnloadHere = ship.garbageCapacity
+                .any { it.value == 0 && it.key in harbor.unloadingStation.garbageTypes }
+            if (canUnloadHere) {
+                if (ship.returnToUnload) {
+                    ship.returnToUnload = false
+                    ship.waitingAtAUnloadingStation = true
+                } else if (ship.isUnloading()) {
+                    unloadGarbageAtStation(ship, harbor.unloadingStation)
                 }
             }
-            ship.behaviour = Behaviour.DEFAULT
-            ship.waitingAtHarbor = false
         }
+    }
+
+    /**
+     * Unloading function.
+     */
+    private fun unloadGarbageAtStation(ship: Ship, harborUnloadingStation: UnloadingStation) {
+        val harborTile = oceanMap.getShipTile(ship)
+        val filterGarbagesWeCanUnload = ship.garbageCapacity
+            .filter { it.value == 0 && it.key in harborUnloadingStation.garbageTypes }.keys.sortedBy { it.ordinal }
+        for (garbageType in filterGarbagesWeCanUnload) {
+            if (ship.garbageCapacity[garbageType] == 0) {
+                val garbageTypeCapacity = ship.maxGarbageCapacity.getValue(garbageType)
+                ship.garbageCapacity[garbageType] = garbageTypeCapacity
+                val creditsEarned = garbageTypeCapacity * harborUnloadingStation.unloadReturn
+                Logger.logUnload(ship.id, garbageTypeCapacity, garbageType, harborTile.id, creditsEarned)
+            }
+        }
+        ship.behaviour = Behaviour.DEFAULT
+        ship.waitingAtAUnloadingStation = false
     }
 }

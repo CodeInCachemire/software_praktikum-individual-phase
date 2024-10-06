@@ -140,27 +140,107 @@ object Logger {
     }
 
     /**
-     * Log start of refueling of a ship.
+     * Log start of refueling of a corporation.
      */
     fun logRefuelStart(corporationId: Int) {
         printer.println("Corporation Action: Corporation $corporationId is starting to refuel.")
         printer.flush()
     }
-
+    // ///////////////////////////////TODO(): HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
     /**
      * Log start of refueling of a ship.
      */
-    fun logRefueling(shipId: Int, harborId: Int) {
-        printer.println("Refueling: Ship $shipId refueled at harbor $harborId.")
+    fun logRefuelingShip(shipID: Int, harborID: Int, amount: Int) {
+        printer.println(
+            "Refueling: Ship $shipID starts to refuel at harbor $harborID and paid $amount credits."
+        )
+        printer.flush()
+        /*} else {
+            printer.println(
+                "Refueling: Ship $shipID starts to fill its refuel capacity at harbor" +
+                    " $harborID and paid $amount credits."
+            )
+            printer.flush()
+        }*/
+    }
+
+    /**
+     * Log refilling tank of Refueling Ship
+     */
+    fun logRefilling(shipID: Int, harborID: Int, amount: Int) {
+        printer.println(
+            "Refueling: Ship $shipID starts to fill its refuel capacity at harbor" +
+                " $harborID and paid $amount credits."
+        )
+        printer.flush()
+    }
+
+    /**
+     * Log refueling fail. Does not refuel
+     */
+    fun logRefuelingFail(shipID: Int, harborID: Int) {
+        printer.println("Refueling: Ship $shipID cannot refuel at harbor $harborID.")
+        printer.flush()
+    }
+
+    /**
+     * Log refueling success. Refuels.
+     */
+    fun logRefuelingFinished(shipID: Int, harborID: Int) {
+        printer.println("Refueling: Ship $shipID refueled at harbor $harborID.")
+        printer.flush()
+    }
+
+    /**
+     * Refueled by refueling ship start.
+     */
+    fun logReuelingByShipStart(shipID: Int, otherShipID: Int) {
+        printer.println("Refueling: Ship $shipID started to refuel ship $otherShipID.")
+        printer.flush()
+    }
+
+    /**
+     * Refueled by refueling ship end.
+     */
+    fun logReuelingByShipEnd(shipID: Int, otherShipID: Int) {
+        printer.println("Refueling: Ship $shipID finished refueling ship $otherShipID.")
         printer.flush()
     }
 
     /**
      * Log unloading of garbage from a ship.
      */
-    fun logUnload(shipId: Int, amount: Int, garbageType: GarbageType, harborId: Int) {
+    fun logUnload(shipID: Int, amount: Int, garbageType: GarbageType, harborID: Int, creditAmount: Int) {
         printer.println(
-            "Unload: Ship $shipId unloaded $amount of garbage $garbageType at harbor $harborId."
+            "Unload: Ship $shipID unloaded $amount of garbage $garbageType at harbor" +
+                " $harborID and received $creditAmount credits."
+        )
+        printer.flush()
+    }
+
+    /**
+     * Damage repair start
+     */
+    fun logDamageRepairStart(shipID: Int, harborID: Int, amount: Int) {
+        printer.println("Repair: Ship $shipID is being repaired at harbor $harborID for $amount credits.")
+        printer.flush()
+    }
+
+    /**
+     * Damage repair finish
+     */
+    fun logDamageRepairFinish(shipID: Int) {
+        printer.println("Repair: Ship $shipID is repaired.")
+        printer.flush()
+    }
+
+    /**
+     * Purchase refuelingShip
+     */
+    fun logPurchaseRefuelingShip(shipID: Int, refuelShipID: Int, harborID: Int, amount: Int) {
+        printer.println(
+            "Purchase: Ship $shipID ordered a refueling ship with id $refuelShipID" +
+                " at harbor $harborID for $amount credits."
         )
         printer.flush()
     }

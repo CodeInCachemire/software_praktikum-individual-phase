@@ -5,6 +5,7 @@ import de.unisaarland.cs.se.selab.event.DurationEvent
 import de.unisaarland.cs.se.selab.event.Event
 import de.unisaarland.cs.se.selab.event.OilEvent
 import de.unisaarland.cs.se.selab.event.StormEvent
+import de.unisaarland.cs.se.selab.event.TyphoonEvent
 import de.unisaarland.cs.se.selab.parser.SimulationData
 
 /**
@@ -36,7 +37,10 @@ class EventHandler(
                     visibilityHandler.globalUpdateCorpInformation(event.createdGarbage)
                 }
                 is DurationEvent -> {
-                    activeEvents.add(event)
+                    activeEvents.add(event) // TODO()
+                }
+                is TyphoonEvent -> {
+                    visibilityHandler.globalUpdateCorpInformation(event.createdGarbage)
                 }
             }
         }

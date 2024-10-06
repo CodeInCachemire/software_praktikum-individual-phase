@@ -1,6 +1,7 @@
 package de.unisaarland.cs.se.selab.data
 
 import de.unisaarland.cs.se.selab.enums.Direction
+import de.unisaarland.cs.se.selab.enums.GarbageType
 import java.util.*
 
 /**
@@ -167,5 +168,79 @@ data class OceanMap(
      */
     fun getMaxGarbageId(): Int {
         return maxGarbageId
+    }
+
+    /**
+     * Get all refueling station harbors that are active
+     */
+    private fun getRefuelingStationHarbors(): Set<Harbor> {
+        return harborsMap.values
+            .filter {
+                if (it.refuelingStation != null) { it.refuelingStation.stationNotClosed() } else { false }
+            }
+            .toSortedSet(compareBy { it.id })
+    }
+
+    /**
+     * Get all refueling station harbor tiles
+     */
+    fun getRefuelingStationHarborTiles(): Set<Tile> {
+        return getRefuelingStationHarbors().map { harborToTile.getValue(it) }.toSet()
+    }
+
+    /**
+     * Get all refueling station harbors that are active
+     */
+    private fun getUnloadingStationHarbors(corpID: Int, garbageType: GarbageType): Set<Harbor> {
+        return harborsMap.values.filter { it.hasUnloadingStation }
+            .filter { corpID in it.corporations }
+            .filter {
+                if (it.unloadingStation != null) {
+                    garbageType in it.unloadingStation.garbageTypes
+                } else {
+                    false
+                }
+            }
+            .toSortedSet(compareBy { it.id })
+    }
+
+    /**
+     * Get all refueling station harbor tiles
+     */
+    fun getUnloadingHarborTiles(corpId: Int, garbageType: GarbageType): Set<Tile> {
+        return getUnloadingStationHarbors(corpId, garbageType).map { harborToTile.getValue(it) }.toSet()
+    }
+
+    /**
+     *
+     */
+    fun getRefuelingStationOnTile(tile: Tile): RefuelingStation? {
+        if (tileToHarbor.getValue(tile).hasRefuelingStation) {
+            return null
+        } else {
+            return tileToHarbor.getValue(tile).refuelingStation
+        }
+    }
+
+    /**
+     *
+     */
+    fun getUnloadingStationOnTile(tile: Tile): UnloadingStation? {
+        if (tileToHarbor.getValue(tile).hasUnloadingStation) {
+            return tileToHarbor.getValue(tile).unloadingStation
+        } else {
+            return null
+        }
+    }
+
+    /**
+     *
+     */
+    fun getShipyardStationOnTile(tile: Tile): ShipyardStation? {
+        if (tileToHarbor.getValue(tile).hasShipyardStation) {
+            return tileToHarbor.getValue(tile).shipyardStation
+        } else {
+            return null
+        }
     }
 }

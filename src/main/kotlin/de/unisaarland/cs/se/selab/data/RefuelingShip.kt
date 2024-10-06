@@ -29,4 +29,6 @@ class RefuelingShip(
     init {
         reward.clear()
     }
+    val refuelingShipCurrently = false
+    val currentRefuelingCapacity = refuelingCapacity
 }

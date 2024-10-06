@@ -19,7 +19,7 @@ data class RefuelingStation(
     /**
      * Station cannot be used anymore
      */
-    fun stationClosed(): Boolean {
-        return refuelTimes == refuelCount
+    fun stationNotClosed(): Boolean {
+        return refuelTimes != refuelCount
     }
 }

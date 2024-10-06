@@ -1,5 +1,6 @@
 package de.unisaarland.cs.se.selab.event
 
+import de.unisaarland.cs.se.selab.Logger.logEvent
 import de.unisaarland.cs.se.selab.Logger.printer
 import de.unisaarland.cs.se.selab.data.Garbage
 import de.unisaarland.cs.se.selab.data.OceanMap
@@ -7,6 +8,7 @@ import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.data.Tile
 import de.unisaarland.cs.se.selab.enums.GarbageType
 import de.unisaarland.cs.se.selab.enums.RewardType
+import de.unisaarland.cs.se.selab.parser.JsonKeys
 import java.util.*
 
 const val ACCELERATION_DECREASE = 4
@@ -35,6 +37,7 @@ class TyphoonEvent(
                 tile ->
             affectedShips.addAll(oceanMap.getShipsOnTile(tile))
         }
+        logEvent(id, JsonKeys.TYPHOON)
         logTyphoon(id, radius, location.id, affectedShips)
         when (strength) {
             STRENGTH1 -> affectedShips.forEach { ship -> increaseFuelConsumption(ship) }

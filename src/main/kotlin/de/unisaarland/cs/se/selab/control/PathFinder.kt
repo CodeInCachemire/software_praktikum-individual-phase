@@ -84,6 +84,17 @@ class PathFinder(private val oceanMap: OceanMap) {
     }
 
     /**
+     * You move to the relevant harbor
+     */
+    fun getShortesPathToHarbor(start: Tile, goalTiles: Set<Tile>): List<Tile> {
+        // The selector function will return null if the tile is not in goal tiles
+        // and the tile id if it is.
+        val context = Context { tile -> tile.takeIf { it in goalTiles }?.harborID }
+        val goalTile = findNearestGoalTile(start, context)
+        return reconstructPath(goalTile, context)
+    }
+
+    /**
      * Returns the shortest path to the closest tile containing garbage or an empty list if no path exists.
      * In case there are multiple closest tiles containing garbage, the one containing the garbage
      * with the lowest id is chosen.

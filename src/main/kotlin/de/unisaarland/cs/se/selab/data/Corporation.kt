@@ -10,7 +10,7 @@ data class Corporation(
     val id: Int,
     val harbors: Set<Tile>,
     val garbageTypes: List<GarbageType>,
-    val credits: Int
+    var credits: Int
 ) {
     val ships = mutableListOf<Ship>()
     val assignedShipsPerTile = mutableMapOf<Tile, MutableList<Ship>>()
