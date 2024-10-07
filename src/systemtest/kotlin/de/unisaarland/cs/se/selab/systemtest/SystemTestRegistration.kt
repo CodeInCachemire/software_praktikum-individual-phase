@@ -12,8 +12,7 @@ object SystemTestRegistration {
      * Should be exclusive with the other two methods!
      */
     fun registerSystemTestsReferenceImpl(manager: SystemTestManager) {
-        manager.registerTest(ExampleTest())
-        manager.registerTest(ExampleTest2())
+        manager.registerTest(TestTyphoonEvent())
     }
 
     /**

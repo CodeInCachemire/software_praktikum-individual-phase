@@ -1,5 +1,7 @@
 package de.unisaarland.cs.se.selab.systemtest.utils
 
+import java.util.*
+
 /**
  * Utils object for providing strings for expected logs.
  * Not complete, extend this for more log messages as you see fit!
@@ -17,5 +19,18 @@ object LoggingUtils {
      */
     fun simulationStatisticsCorporation(corporationId: Int, amount: Int): String {
         return "Simulation Statistics: Corporation $corporationId collected $amount of garbage."
+    }
+
+    fun eventTyphoon(eventId: Int, eventType: String): String {
+        return "Event: Event $eventId of type $eventType happened."
+    }
+
+    /**
+     * Log event typhoon.
+     */
+    fun typhoonEvent(eventId: Int, radius: Int, tileID: Int, sortedShips: SortedSet<Int>): String {
+        val sortedShipsIDs = sortedShips.joinToString(", ")
+        return "Event: Typhoon $eventId at tile $tileID with radius $radius affected" +
+            " ships: $sortedShipsIDs."
     }
 }

@@ -1,0 +1,29 @@
+{
+  "garbage": [
+    {
+      "id": 2,
+      "type": "CHEMICALS",
+      "location": 513,
+      "amount": 2000
+    },
+    {
+      "id": 3,
+      "type": "OIL",
+      "location": 565,
+      "amount": 1000
+    }
+
+  ],
+  "events": [
+    {
+      "id": 0,
+      "type": "TYPHOON",
+      "tick": 0,
+      "location": 513,
+      "radius": 1,
+      "strength": 4
+    }
+  ],
+  "tasks": [],
+  "rewards": []
+}

@@ -192,13 +192,14 @@ class ShipHandler(
                 if (ship.corporation.credits >= cost) {
                     ship.waitingAtARefuelingStation = true
                     Logger.logRefuelingShip(ship.id, harbor.id, cost)
+                    ship.corporation.credits -= cost
                 } else {
                     Logger.logRefuelingFail(ship.id, harbor.id)
                 }
             } else if (ship.isRefueling()) {
-                val cost = harbor.refuelingStation.refuelCost
+                // val cost = harbor.refuelingStation.refuelCost
                 ship.fuel = ship.maxFuel
-                ship.corporation.credits -= cost
+                // ship.corporation.credits -= cost
                 Logger.logRefuelingFinished(ship.id, harbor.id)
                 harbor.refuelingStation.incCount()
                 ship.waitingAtARefuelingStation = false
@@ -340,12 +341,13 @@ class ShipHandler(
                 if (ship.corporation.credits >= cost) {
                     ship.waitingAtAShipyard = true
                     Logger.logDamageRepairStart(ship.id, harbor.id, cost)
+                    ship.corporation.credits -= cost
                 }
             } else if (ship.isRepairing()) {
-                val cost = harbor.shipyardStation.repairCost
+                // val cost = harbor.shipyardStation.repairCost
                 ship.acceleration = ship.accelerationOriginal
                 ship.maxVelocity = ship.maxVelocityOriginal
-                ship.corporation.credits -= cost
+                // ship.corporation.credits -= cost
                 ship.isDamaged = false
                 Logger.logDamageRepairFinish(ship.id)
                 ship.waitingAtAShipyard = false

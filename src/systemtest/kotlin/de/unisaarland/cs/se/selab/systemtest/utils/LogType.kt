@@ -7,7 +7,8 @@ package de.unisaarland.cs.se.selab.systemtest.utils
 enum class LogType(private val message: String) {
     INITIALIZATION_INFO("Initialization Info"),
     SIMULATION_INFO("Simulation Info"),
-    SIMULATION_STATISTICS("Simulation Statistics");
+    SIMULATION_STATISTICS("Simulation Statistics"),
+    EVENT("Event");
 
     override fun toString(): String {
         return message

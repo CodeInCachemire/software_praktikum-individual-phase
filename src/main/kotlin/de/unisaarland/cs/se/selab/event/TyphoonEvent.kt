@@ -9,7 +9,6 @@ import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.data.Tile
 import de.unisaarland.cs.se.selab.enums.GarbageType
 import de.unisaarland.cs.se.selab.enums.RewardType
-import de.unisaarland.cs.se.selab.enums.TileType
 import de.unisaarland.cs.se.selab.parser.JsonKeys
 import java.util.*
 
@@ -113,14 +112,14 @@ class TyphoonEvent(
                     garbageType,
                     amountCollectedForType
                 )
-            if (garbageType != GarbageType.CHEMICALS &&
+            /*if (garbageType != GarbageType.CHEMICALS &&
                 oceanMap.getShipTile(ship).type != TileType.DEEP_OCEAN
-            ) {
-                oceanMap.addGarbage(garbageNew, oceanMap.getShipTile(ship))
-                createdGarbage.add(garbageNew)
-            } else {
+            ) {*/
+            oceanMap.addGarbage(garbageNew, oceanMap.getShipTile(ship))
+            createdGarbage.add(garbageNew)
+            /*} else {
                 oceanMap.incMaxGarbageID()
-            }
+            }*/
         }
     }
 
