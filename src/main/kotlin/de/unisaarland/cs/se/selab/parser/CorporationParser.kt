@@ -299,6 +299,9 @@ class CorporationParser(private val jsonString: String, private var simulationDa
                 val cap = ship.getInt(JsonKeys.CAPACITY)
                 capacity[garbageType] = cap
             }
+            ShipType.REFUELING -> {
+                return Result.failure(ParserException("This ship $id can never have REFUELING $type."))
+            }
         }
 
         val shipsCorporation = corporationsById[corporation] ?: return Result.failure(
@@ -476,6 +479,7 @@ class CorporationParser(private val jsonString: String, private var simulationDa
                 ShipType.SCOUTING -> setOf(JsonKeys.VISIBILITY_RANGE)
                 ShipType.COORDINATING -> setOf(JsonKeys.VISIBILITY_RANGE)
                 ShipType.COLLECTING -> setOf(JsonKeys.GARBAGE_TYPE, JsonKeys.CAPACITY)
+                ShipType.REFUELING -> emptySet()
             }
         )
 

@@ -6,5 +6,6 @@ package de.unisaarland.cs.se.selab.enums
 enum class ShipType {
     SCOUTING,
     COORDINATING,
-    COLLECTING
+    COLLECTING,
+    REFUELING
 }

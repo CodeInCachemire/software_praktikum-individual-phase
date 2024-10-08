@@ -44,6 +44,7 @@ object ShipValidationConstants {
     const val OILCAPMAX = 100000
     const val CHEMCAPMIN = 1000
     const val CHEMCAPMAX = 10000
+    const val REFUELINGALL = 100000
 }
 
 /*
@@ -55,6 +56,7 @@ internal val ShipType.maxVelMin: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGMAXVELMIN
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGMAXVELMIN
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGMAXVELMIN
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val ShipType.maxVelMax: Int
@@ -62,6 +64,7 @@ internal val ShipType.maxVelMax: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGMAXVELMAX
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGMAXVELMAX
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGMAXVELMAX
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val ShipType.accelMin: Int
@@ -69,6 +72,7 @@ internal val ShipType.accelMin: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGACCELMIN
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGACCELMIN
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGACCELMIN
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val ShipType.accelMax: Int
@@ -76,6 +80,7 @@ internal val ShipType.accelMax: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGACCELMAX
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGACCELMAX
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGACCELMAX
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val ShipType.fuelCapMin: Int
@@ -83,12 +88,14 @@ internal val ShipType.fuelCapMin: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGFUELCAPMIN
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGFUELCAPMIN
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGFUELCAPMIN
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 internal val ShipType.fuelCapMax: Int
     get() = when (this) {
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGFUELCAPMAX
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGFUELCAPMAX
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGFUELCAPMAX
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val ShipType.fuelConsumpMin: Int
@@ -96,6 +103,7 @@ internal val ShipType.fuelConsumpMin: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGFUELCONSUMPMIN
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGFUELCONSUMPMIN
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGFUELCONSUMPMIN
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val ShipType.fuelConsumpMax: Int
@@ -103,6 +111,7 @@ internal val ShipType.fuelConsumpMax: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGFUELCONSUMPMAX
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGFUELCONSUMPMAX
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGFUELCONSUMPMAX
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val ShipType.visRangeMin: Int
@@ -110,6 +119,7 @@ internal val ShipType.visRangeMin: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGVISRANGEMIN
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGVISRANGEMIN
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGVISRANGEMIN
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val ShipType.visRangeMax: Int
@@ -117,6 +127,7 @@ internal val ShipType.visRangeMax: Int
         ShipType.SCOUTING -> ShipValidationConstants.SCOUTINGVISRANGEMAX
         ShipType.COORDINATING -> ShipValidationConstants.COORDINATINGVISRANGEMAX
         ShipType.COLLECTING -> ShipValidationConstants.COLLECTINGVISRANGEMAX
+        ShipType.REFUELING -> ShipValidationConstants.REFUELINGALL
     }
 
 internal val GarbageType.minCap: Int

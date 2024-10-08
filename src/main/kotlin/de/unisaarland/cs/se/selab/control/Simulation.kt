@@ -21,8 +21,9 @@ class Simulation(
     private val eventHandler = EventHandler(simulationData, oceanMap, visibilityHandler)
     private val taskHandler = TaskHandler(simulationData, oceanMap, pathFinder)
     private val driftHandler = DriftHandler(oceanMap)
-    private val movementHandler = MovementHandler(pathFinder, oceanMap, visibilityHandler)
-    private val shipHandler = ShipHandler(oceanMap, visibilityHandler, corporations)
+    private val purchaseHandler = PurchaseHandler(oceanMap, pathFinder)
+    private val shipHandler = ShipHandler(oceanMap, visibilityHandler, corporations, purchaseHandler, simulationData)
+    private val movementHandler = MovementHandler(pathFinder, oceanMap, visibilityHandler, purchaseHandler)
 
     init {
 
@@ -47,6 +48,7 @@ class Simulation(
             }
 
             for (corporation in corporations) {
+                purchaseHandler.purchasePhase(corporation)
                 movementHandler.movementPhase(corporation)
                 shipHandler.attachTracker(corporation)
                 shipHandler.collectionPhase(corporation)
@@ -54,7 +56,7 @@ class Simulation(
                 shipHandler.refuelingPhase(corporation)
                 shipHandler.unloadingPhase(corporation)
                 shipHandler.repairingPhase(corporation)
-                // shipHandler.purchasingPhase(corporation,currentTick)
+                shipHandler.purchasingPhase(corporation)
                 Logger.logFinishAction(corporation.id)
             }
 

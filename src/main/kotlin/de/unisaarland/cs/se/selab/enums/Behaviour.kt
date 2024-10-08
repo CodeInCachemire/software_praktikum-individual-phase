@@ -10,5 +10,6 @@ enum class Behaviour {
     DOING_TASK,
     ESCAPING,
     EXPLORING,
-    REPAIRING
+    REPAIRING,
+    PURCHASING
 }

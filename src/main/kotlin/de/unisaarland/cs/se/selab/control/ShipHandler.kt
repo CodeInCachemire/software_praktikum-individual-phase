@@ -6,9 +6,12 @@ import de.unisaarland.cs.se.selab.data.Garbage
 import de.unisaarland.cs.se.selab.data.Harbor
 import de.unisaarland.cs.se.selab.data.OceanMap
 import de.unisaarland.cs.se.selab.data.Ship
+import de.unisaarland.cs.se.selab.data.ShipyardStation
 import de.unisaarland.cs.se.selab.data.UnloadingStation
 import de.unisaarland.cs.se.selab.enums.Behaviour
 import de.unisaarland.cs.se.selab.enums.GarbageType
+import de.unisaarland.cs.se.selab.enums.ShipType
+import de.unisaarland.cs.se.selab.parser.SimulationData
 import de.unisaarland.cs.se.selab.task.CooperationTask
 
 /**
@@ -18,9 +21,10 @@ import de.unisaarland.cs.se.selab.task.CooperationTask
 class ShipHandler(
     private val oceanMap: OceanMap,
     private val visibilityHandler: VisibilityHandler,
-    private val corporations: List<Corporation>
+    private val corporations: List<Corporation>,
+    private val purchaseHandler: PurchaseHandler,
+    private val simulationData: SimulationData
 ) {
-
     /**
      * Handles the tracker attachment for the given corporation.
      */
@@ -297,6 +301,7 @@ class ShipHandler(
      */
     private fun unloadGarbageAtStation(ship: Ship, harborUnloadingStation: UnloadingStation) {
         val harborTile = oceanMap.getShipTile(ship)
+        val harbor = oceanMap.tileToHarbor.getValue(harborTile)
         /*val filterGarbagesWeCanUnload = ship.garbageCapacity
             .filter { it.value == 0 && it.key in harborUnloadingStation.garbageTypes }.keys.sortedBy { it.ordinal }*/
         val filterGarbagesWeCanUnload = ship.garbageCapacity
@@ -307,7 +312,7 @@ class ShipHandler(
                 ship.garbageCapacity[garbageType] = garbageTypeCapacity
                 val creditsEarned = garbageTypeCapacity * harborUnloadingStation.unloadReturn
                 ship.corporation.credits += creditsEarned
-                Logger.logUnload(ship.id, garbageTypeCapacity, garbageType, harborTile.id, creditsEarned)
+                Logger.logUnload(ship.id, garbageTypeCapacity, garbageType, harbor.id, creditsEarned)
             }
         }
         ship.behaviour = Behaviour.DEFAULT
@@ -367,6 +372,92 @@ class ShipHandler(
                     )
                 }
                 */
+            }
+        }
+    }
+
+    /**
+     * Handles the purchasing phase for the given corporation.
+     */
+    fun purchasingPhase(corporation: Corporation) {
+        if (corporation.purchaseCounter == 0 && !corporation.isBuyingShip) {
+            deliverShip(corporation)
+        } else if (!corporation.isBuyingShip) {
+            orderShip(corporation)
+        }
+    }
+
+    /**
+     *
+     */
+    private fun orderShip(corporation: Corporation) {
+        val ship = corporation.ships.find { it.id == corporation.assignedBuyingShipId }
+        if (ship != null) {
+            if (!ship.returnToPurchase) {
+                return
+            }
+            val harbor = oceanMap.tileToHarbor[oceanMap.getShipTile(ship)]
+            if (harbor != null && harbor.shipyardStation != null) {
+                val shipYard = harbor.shipyardStation
+                if (corporation.credits >= shipYard.shipCost) {
+                    corporation.credits -= shipYard.shipCost
+                    purchaseShip(ship, corporation, shipYard)
+                } else {
+                    purchaseHandler.clearAll(corporation)
+                    ship.returnToPurchase = false
+                }
+            }
+        }
+    }
+
+    /**
+     * Purchase and create a ship
+     */
+    private fun purchaseShip(ship: Ship, corporation: Corporation, shipYard: ShipyardStation) {
+        val shipTile = oceanMap.getShipTile(ship)
+        val harbor = oceanMap.getHarborTile(shipTile)
+        val maxVelocity = shipYard.maxVelocity
+        val acceleration = shipYard.acceleration
+        val maxFuel = shipYard.fuelCapacity
+        val fuelConsumption = shipYard.fuelConsumption
+        val refuelingCapacity = shipYard.refuelingCapacity
+        val refuelingTime = shipYard.refuelingTime
+        val counterDelivery = shipYard.deliveryTime
+        val refuelingShip = Ship(
+            oceanMap.maxShipID + 1,
+            ShipType.REFUELING,
+            corporation,
+            maxVelocity,
+            acceleration,
+            maxFuel,
+            fuelConsumption,
+            visibilityRange = 0,
+            maxGarbageCapacity = mutableMapOf()
+        )
+        oceanMap.maxShipID += 1
+        refuelingShip.refuelingTime = refuelingTime
+        refuelingShip.setOriginalRefuelCap(refuelingCapacity)
+        corporation.storeBoughtTileNdShip = Pair(shipTile, refuelingShip)
+        corporation.purchaseCounter = counterDelivery
+        corporation.isBuyingShip = true
+        Logger.logPurchaseRefuelingShip(ship.id, refuelingShip.id, harbor.id, shipYard.shipCost)
+        ship.returnToPurchase = false
+        corporation.assignedBuyingShipId = -1
+    }
+
+    /**
+     * Deliver ship
+     */
+    private fun deliverShip(corporation: Corporation) {
+        if (corporation.purchaseCounter == 0 && !corporation.isBuyingShip) {
+            val refuelingShipTile = corporation.storeBoughtTileNdShip.first
+            val refuelingShip = corporation.storeBoughtTileNdShip.second
+            if (refuelingShip != null && refuelingShipTile != null) {
+                Logger.logPurchaseFinished(refuelingShip.id, corporation.id, refuelingShipTile.id)
+                simulationData.ships[refuelingShip.id] = refuelingShip
+                corporation.ships.add(refuelingShip)
+                oceanMap.addShip(refuelingShip, refuelingShipTile)
+                purchaseHandler.clearAll(corporation)
             }
         }
     }

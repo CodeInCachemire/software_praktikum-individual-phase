@@ -11,7 +11,7 @@ import kotlin.math.min
 /**
  * The Ship class
  */
-open class Ship(
+class Ship(
     val id: Int,
     val type: ShipType,
     val corporation: Corporation,
@@ -20,7 +20,7 @@ open class Ship(
     val maxFuel: Int,
     var fuelConsumption: Int,
     var visibilityRange: Int,
-    val maxGarbageCapacity: MutableMap<GarbageType, Int>
+    val maxGarbageCapacity: MutableMap<GarbageType, Int>,
 ) : Comparable<Ship> {
     var fuelConsumptionPerTile = fuelConsumption * Constants.TILE_DISTANCE
     var velocity = 0
@@ -41,6 +41,10 @@ open class Ship(
     var returnToRefuel = false
     var returnToUnload = false
     var returnToRepair = false
+    var returnToPurchase = false
+    private var refuelingCapacityOriginal: Int = -1
+    var refuelingCapacity: Int = -1
+    var refuelingTime: Int = -1
 
     /**
      * Accelerates the ship and increases its current velocity
@@ -95,6 +99,13 @@ open class Ship(
     }
 
     /**
+     * Returns if ship is buying this tick or not
+     */
+    fun isPurchasing(): Boolean {
+        return returnToPurchase
+    }
+
+    /**
      * Number of tiles reachable with current velocity
      */
     fun getDistanceWithVelocity(velocity: Int = this.velocity): Int {
@@ -110,5 +121,29 @@ open class Ship(
 
     override fun compareTo(other: Ship): Int {
         return id.compareTo(other.id)
+    }
+
+    /**
+     * Set refuelingcapacity and refuelingTime
+     */
+    fun setRefuelingCapacityAndTime(refuelingCapacity: Int, refuelingTime: Int) {
+        // SHIP TYPE MUST BE REFUELING TYPE //TODO()
+        this.refuelingCapacity = refuelingCapacity
+        this.refuelingTime = refuelingTime
+    }
+
+    /**
+     * Set original refueling capacity
+     */
+    fun setOriginalRefuelCap(refuelingCapacity: Int) {
+        this.refuelingCapacityOriginal = refuelingCapacity
+        this.refuelingCapacity = refuelingCapacity
+    }
+
+    /**
+     * Get original refueling Capacity
+     */
+    fun getOriginalRefuelCap(): Int {
+        return refuelingCapacityOriginal
     }
 }

@@ -14,13 +14,14 @@ data class OceanMap(
     val garbageToTile = mutableMapOf<Garbage, Tile>()
 
     val tileToShip = mutableMapOf<Tile, SortedSet<Ship>>()
-    val shipToTile = mutableMapOf<Ship, Tile>()
+    val shipToTile = mutableMapOf<Ship, Tile>() // needs handling
     val tileToHarbor = mutableMapOf<Tile, Harbor>()
     val harborToTile = mutableMapOf<Harbor, Tile>()
     val harborsMap: MutableMap<Int, Harbor> = mutableMapOf()
     val harborTiles: MutableSet<Tile> = mutableSetOf()
 
     private var maxGarbageId = 0
+    var maxShipID = 0
 
     /**
      * Get tile by id
@@ -94,6 +95,9 @@ data class OceanMap(
     fun addShip(ship: Ship, tile: Tile) {
         tileToShip.getOrPut(tile) { sortedSetOf() }.add(ship)
         shipToTile[ship] = tile
+        if (ship.id > maxShipID) {
+            maxShipID = ship.id
+        }
     }
 
     /**
@@ -199,16 +203,13 @@ data class OceanMap(
      * Get all refueling station harbors that are active
      */
     private fun getUnloadingStationHarbors(corpID: Int, garbageType: GarbageType): Set<Harbor> {
-        return harborsMap.values.filter { it.hasUnloadingStation }
-            .filter { corpID in it.corporations }
-            .filter {
-                if (it.unloadingStation != null) {
-                    garbageType in it.unloadingStation.garbageTypes
-                } else {
-                    false
-                }
+        return harborsMap.values.filter {
+            if (it.unloadingStation != null) {
+                garbageType in it.unloadingStation.garbageTypes
+            } else {
+                false
             }
-            .toSortedSet(compareBy { it.id })
+        }.filter { corpID in it.corporations }.toSortedSet(compareBy { it.id })
     }
 
     /**
@@ -235,6 +236,25 @@ data class OceanMap(
      */
     fun getRepairingStationHarborTiles(): Set<Tile> {
         return getRepairingStationHarbors().map { harborToTile.getValue(it) }.toSet()
+    }
+
+    /**
+     * Get all refueling station harbors that are active
+     */
+    fun getPurchasingStationCheapestCost(corporation: Corporation): Int {
+        val validStations = harborsMap.values
+            .filter { it.shipyardStation != null }
+            .filter { corporation.id in it.corporations }.mapNotNull { it.shipyardStation }
+        return validStations.minOf { it.shipCost }
+    }
+
+    /**
+     * Get all refueling station harbors that are active
+     */
+    fun getPurchasingStations(corporation: Corporation): List<Harbor> {
+        return harborsMap.values
+            .filter { it.shipyardStation != null }
+            .filter { corporation.id in it.corporations }
     }
 
     /**

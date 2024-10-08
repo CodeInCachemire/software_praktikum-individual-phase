@@ -33,4 +33,20 @@ object LoggingUtils {
         return "Event: Typhoon $eventId at tile $tileID with radius $radius affected" +
             " ships: $sortedShipsIDs."
     }
+
+    /**
+     * Purchase event
+     */
+    fun purchaseRefueling(shipID: Int, refuelShipID: Int, harborID: Int, cost: Int): String {
+        return "Purchase: Ship $shipID ordered a refueling ship with id $refuelShipID" +
+            " at harbor $harborID for $cost credits."
+    }
+
+    /**
+     * Delivered Ship
+     */
+    fun deliveredRefueling(refuelShipID: Int, corporationId: Int, tileID: Int): String {
+        return "Purchase: Ship $refuelShipID delivered to corporation $corporationId at" +
+            " $tileID."
+    }
 }

@@ -237,10 +237,21 @@ object Logger {
     /**
      * Purchase refuelingShip
      */
-    fun logPurchaseRefuelingShip(shipID: Int, refuelShipID: Int, harborID: Int, amount: Int) {
+    fun logPurchaseRefuelingShip(shipID: Int, refuelShipID: Int, harborID: Int, cost: Int) {
         printer.println(
             "Purchase: Ship $shipID ordered a refueling ship with id $refuelShipID" +
-                " at harbor $harborID for $amount credits."
+                " at harbor $harborID for $cost credits."
+        )
+        printer.flush()
+    }
+
+    /**
+     * Log purchase is finished
+     */
+    fun logPurchaseFinished(refuelShipID: Int, corporationId: Int, tileID: Int) {
+        printer.println(
+            "Purchase: Ship $refuelShipID delivered to corporation $corporationId at" +
+                " $tileID."
         )
         printer.flush()
     }

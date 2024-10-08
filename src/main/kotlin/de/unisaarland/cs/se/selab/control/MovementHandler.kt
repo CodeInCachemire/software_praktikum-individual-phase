@@ -16,7 +16,8 @@ import de.unisaarland.cs.se.selab.enums.ShipType
 class MovementHandler(
     private val pathFinder: PathFinder,
     private val oceanMap: OceanMap,
-    private val visibilityHandler: VisibilityHandler
+    private val visibilityHandler: VisibilityHandler,
+    private val purchaseHandler: PurchaseHandler
 ) {
 
     /**
@@ -51,7 +52,9 @@ class MovementHandler(
             if (ship.behaviour != Behaviour.REPAIRING) {
                 ship.waitingAtAShipyard = false
             }
-            ship.task?.update(ship, oceanMap, movementPhase = true)
+            if (ship.type != ShipType.REFUELING) {
+                ship.task?.update(ship, oceanMap, movementPhase = true)
+            }
         }
     }
     /*
@@ -165,6 +168,7 @@ class MovementHandler(
     private fun moveToRefuel(ship: Ship) {
         ship.behaviour = Behaviour.REFUELING
         ship.task = null
+        ship.returnToPurchase = false // TODO()
         if (ship.isRefueling()) {
             ship.returnToRefuel = false
         } else {
@@ -262,6 +266,7 @@ class MovementHandler(
      * @throws IllegalArgumentException If the ship has no task.
      */
     private fun moveToTask(ship: Ship) {
+        ship.returnToPurchase = false
         val shipTile = oceanMap.getShipTile(ship)
         val shipTask = ship.task ?: throw IllegalArgumentException("Ship has no task")
         val path = pathFinder.getShortestPathToTile(shipTile, setOf(shipTask.destination))
@@ -285,6 +290,7 @@ class MovementHandler(
             ShipType.SCOUTING -> getScoutingPathDefault(ship)
             ShipType.COORDINATING -> getCoordinatingPathDefault(ship)
             ShipType.COLLECTING -> getCollectingPathDefault(ship)
+            ShipType.REFUELING -> getRefuelingPathDefault(ship)
         }
         moveAlongPath(ship, path)
         // If a collecting ship actually moves towards the selected garbage
@@ -329,6 +335,14 @@ class MovementHandler(
         val shipTile = oceanMap.getShipTile(ship)
         // Look for ships the given ship can cooperate with in the corporation's visibility range and
         // return the shortest path to the closest reachable ship if there is one.
+        // easiest way to do this since we would like to move the ship to purchase without creating
+        // a new move to function
+        // addition of flag for verification
+        if (ship.corporation.assignedBuyingShipId == ship.id && ship.corporation.assignedBuyingShipId != -1) {
+            val stationTile = purchaseHandler.cheapeastShipyardStation(ship.corporation) ?: return emptyList()
+            ship.returnToPurchase = true
+            return pathFinder.getShortestPathToTile(oceanMap.getShipTile(ship), setOf(stationTile))
+        }
         val relevantShips = visibilityHandler.getShipsInCorpVisibility(ship)
             .mapValues { it.value.filter { otherShip -> ship.canCooperateWith(otherShip) } }
             .filter { it.value.isNotEmpty() }
@@ -362,6 +376,31 @@ class MovementHandler(
         if (relevantGarbage.isNotEmpty()) {
             return pathFinder.getShortestPathToGarbage(shipTile, relevantGarbage)
         }
+        // Otherwise don't move.
+        return emptyList()
+    }
+
+    /**
+     * Returns a path according to the default behaviour of the given refueling ship.
+     */
+    private fun getRefuelingPathDefault(ship: Ship): List<Tile> {
+        val shipTile = oceanMap.getShipTile(ship)
+        /*if(ship.currentRefuelingCapacity == 0){
+            moveToRefill(ship)
+            return emptyList()
+        }*/
+        /*val shipsWhichWeCanRefuel =
+            ship.corporation.ships.filter { it.fuel < it.maxFuel / 2 && it.id != ship.id }
+                .filter { ship.refuelingCapacity >= it.maxFuel - it.fuel && !it.isRefueling() }
+                .filter { !it.beingRefueledByShip }
+                // .filter { !it.isRefueling() }
+                .associateBy { oceanMap.getShipTile(it) }
+        if (shipsWhichWeCanRefuel.isNotEmpty()) {
+            val shipTileMap = shipsWhichWeCanRefuel.entries.groupBy({ it.key }, { it.value })
+            val path =
+                pathFinder.getShortestPathToShip(shipTile, shipTileMap)
+            return path
+        }*/
         // Otherwise don't move.
         return emptyList()
     }

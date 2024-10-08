@@ -5,6 +5,7 @@ import de.unisaarland.cs.se.selab.data.Garbage
 import de.unisaarland.cs.se.selab.data.OceanMap
 import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.data.Tile
+import de.unisaarland.cs.se.selab.enums.ShipType
 import java.util.SortedSet
 
 /**
@@ -15,9 +16,13 @@ class VisibilityHandler(
     private val corporations: List<Corporation>
 ) {
     private fun getTilesInShipVisibility(ship: Ship): Set<Tile> {
-        val shipTile = oceanMap.getShipTile(ship)
-        val tilesInShipVisibility = oceanMap.getTilesInRadius(shipTile, ship.visibilityRange)
-        return tilesInShipVisibility.toSet()
+        if (ship.type != ShipType.REFUELING) {
+            val shipTile = oceanMap.getShipTile(ship)
+            val tilesInShipVisibility = oceanMap.getTilesInRadius(shipTile, ship.visibilityRange)
+            return tilesInShipVisibility.toSet()
+        } else {
+            return emptySet()
+        }
     }
 
     private fun getTilesInCorpVisibility(corporation: Corporation): Set<Tile> {

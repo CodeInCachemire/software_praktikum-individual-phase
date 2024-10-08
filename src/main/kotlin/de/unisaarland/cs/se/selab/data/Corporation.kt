@@ -17,4 +17,8 @@ data class Corporation(
     val trackedGarbage = mutableSetOf<Garbage>()
     val information = mutableMapOf<Tile, SortedSet<Garbage>>()
     var lastCooperated: Corporation? = null
+    var isBuyingShip = false
+    var purchaseCounter = -1
+    var assignedBuyingShipId = -1
+    var storeBoughtTileNdShip: Pair<Tile?, Ship?> = Pair(null, null)
 }
