@@ -7,6 +7,7 @@ import de.unisaarland.cs.se.selab.data.OceanMap
 import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.data.Tile
 import de.unisaarland.cs.se.selab.enums.Behaviour
+import de.unisaarland.cs.se.selab.enums.GarbageType
 import de.unisaarland.cs.se.selab.enums.ShipType
 
 /**
@@ -39,9 +40,6 @@ class MovementHandler(
                 ship.behaviour != Behaviour.REPAIRING
             ) {
                 ship.waitingAtHarbor = false // TODO() we set to false here
-                // ship.waitingAtAUnloadingStation = false
-                // ship.waitingAtAShipyard = false
-                // ship.waitingAtAShipyard = false
             }
             if (ship.behaviour != Behaviour.REFUELING) {
                 ship.waitingAtARefuelingStation = false
@@ -57,20 +55,6 @@ class MovementHandler(
             }
         }
     }
-    /*
-    /**
-     * Check Which harbors you are at
-     */
-    private fun checkWhichHarbors(ship: Ship, shipTile: Tile) {
-        val harbor = oceanMap.tileToHarbor[shipTile]
-        if (harbor != null) {
-            ship.waitingAtAShipyard = harbor.hasShipyardStation
-            ship.waitingAtARefuelingStation = harbor.hasRefuelingStation
-            if (ship.corporation.id in harbor.corporations) {
-                ship.waitingAtAUnloadingStation = harbor.hasUnloadingStation
-            }
-        }
-    }*/
 
     /**
      * Determines the behaviour and moves the ship for this tick.
@@ -234,21 +218,22 @@ class MovementHandler(
      */
     private fun moveToUnloadHarbor(ship: Ship) { // //TODO()))
         val shipTile = oceanMap.getShipTile(ship)
-        val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys.sortedBy { it.ordinal }
-        var path = emptyList<Tile>()
+        val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys
+        // var path = emptyList<Tile>()
         // WE only move if we can find a path to it
-        for (garbageType in needsToUnload) {
-            val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, garbageType)
-            if (tilesWithUnloadingStation.isNotEmpty()) {
-                path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)
-                if (path.isNotEmpty()) {
-                    break
-                }
+        for (garbageType in GarbageType.entries) {
+            if (garbageType in needsToUnload) {
+                val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, garbageType)
+                // if (tilesWithUnloadingStation.isNotEmpty()) {
+                val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)
+                moveAlongPath(ship, path)
+                return
+                    /*if (path.isNotEmpty()) {
+                        break
+                    }
+                }*/
             }
         }
-        /*val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, garbageType)
-        val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)*/
-        moveAlongPath(ship, path)
     }
 
     /**

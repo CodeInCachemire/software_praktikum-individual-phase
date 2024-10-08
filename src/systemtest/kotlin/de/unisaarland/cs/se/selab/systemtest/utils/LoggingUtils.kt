@@ -1,5 +1,6 @@
 package de.unisaarland.cs.se.selab.systemtest.utils
 
+import de.unisaarland.cs.se.selab.enums.GarbageType
 import java.util.*
 
 /**
@@ -48,5 +49,24 @@ object LoggingUtils {
     fun deliveredRefueling(refuelShipID: Int, corporationId: Int, tileID: Int): String {
         return "Purchase: Ship $refuelShipID delivered to corporation $corporationId at" +
             " $tileID."
+    }
+
+    /**
+     * Repair start
+     */
+    fun logDamageRepairStart(shipID: Int, harborID: Int, amount: Int): String {
+        return "Repair: Ship $shipID is being repaired at harbor $harborID for $amount credits."
+    }
+
+    /**
+     * Damage repair finish
+     */
+    fun logDamageRepairFinish(shipID: Int): String {
+        return "Repair: Ship $shipID is repaired."
+    }
+
+    fun logUnload(shipID: Int, amount: Int, garbageType: GarbageType, harborID: Int, creditAmount: Int): String {
+        return "Unload: Ship $shipID unloaded $amount of garbage $garbageType at harbor" +
+            " $harborID and received $creditAmount credits."
     }
 }

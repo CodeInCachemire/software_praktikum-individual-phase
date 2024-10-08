@@ -203,13 +203,9 @@ data class OceanMap(
      * Get all refueling station harbors that are active
      */
     private fun getUnloadingStationHarbors(corpID: Int, garbageType: GarbageType): Set<Harbor> {
-        return harborsMap.values.filter {
-            if (it.unloadingStation != null) {
-                garbageType in it.unloadingStation.garbageTypes
-            } else {
-                false
-            }
-        }.filter { corpID in it.corporations }.toSortedSet(compareBy { it.id })
+        return harborsMap.values
+            .filter { it.unloadingStation != null && it.unloadingStation.garbageTypes.contains(garbageType) }
+            .filter { corpID in it.corporations }.toSortedSet(compareBy { it.id })
     }
 
     /**
@@ -226,9 +222,6 @@ data class OceanMap(
         return harborsMap.values
             .filter { it.shipyardStation != null }
             .toSortedSet(compareBy { it.id })
-            /*
-            .toSortedSet(compareBy { it.id })
-            .minOf { it }*/
     }
 
     /**

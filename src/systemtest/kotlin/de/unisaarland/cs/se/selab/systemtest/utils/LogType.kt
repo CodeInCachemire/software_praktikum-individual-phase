@@ -9,7 +9,9 @@ enum class LogType(private val message: String) {
     SIMULATION_INFO("Simulation Info"),
     SIMULATION_STATISTICS("Simulation Statistics"),
     EVENT("Event"),
-    PURCHASE("Purchase");
+    PURCHASE("Purchase"),
+    REPAIR("Repair"),
+    UNLOAD("Unload");
 
     override fun toString(): String {
         return message
