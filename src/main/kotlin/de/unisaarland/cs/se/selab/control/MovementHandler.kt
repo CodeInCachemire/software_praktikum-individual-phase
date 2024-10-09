@@ -449,7 +449,7 @@ class MovementHandler(
         val otherShipTile = oceanMap.getShipTile(otherShip)
         return refuelship.id != otherShip.id &&
             refuelship.corporation.id == otherShip.corporation.id &&
-            otherShip.fuel < otherShip.maxFuel / 2.0 &&
+            otherShip.fuel < otherShip.maxFuel / 2 &&
             refuelship.currentRefuelingCapacity >= otherShip.maxFuel - otherShip.fuel &&
             !otherShip.refuelingShipCurrently &&
             !otherShip.beingRefueledByShip && !otherShip.isRefueling() &&
