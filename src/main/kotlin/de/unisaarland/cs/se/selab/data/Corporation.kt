@@ -21,7 +21,4 @@ data class Corporation(
     var purchaseCounter = -1
     var assignedBuyingShipId = -1
     var storeBoughtTileNdShip: Pair<Tile?, Ship?> = Pair(null, null)
-
-    // ship as a key
-    // val refuelingMaps: MutableMap<Int?, Int?> = mutableMapOf()
 }

@@ -77,9 +77,9 @@ class PurchaseHandler(
         // ship with the lowest id that is not currently leaving a restricted area, doing
         // a task, or on the way to refuel and has an existing path to the harbor with the shipyard
         // station.
-        val checkingCondition = ship.behaviour == Behaviour.ESCAPING ||
-            ship.task != null || ship.behaviour == Behaviour.REFUELING || ship.isDamaged
-        if (checkingCondition) {
+        if (ship.behaviour == Behaviour.ESCAPING ||
+            ship.task != null || ship.behaviour == Behaviour.REFUELING
+        ) {
             return false
         }
         // ship is considered valid if it is not restricted nor has a task and has a valid path.

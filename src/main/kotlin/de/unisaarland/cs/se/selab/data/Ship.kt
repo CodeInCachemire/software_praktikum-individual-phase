@@ -36,19 +36,15 @@ class Ship(
     var isDamaged = false
     val maxVelocityOriginal = maxVelocity
     val accelerationOriginal = acceleration
+    var beingRefueledByShip = false
     val visibilityRangeOriginal = visibilityRange
     var returnToRefuel = false
     var returnToUnload = false
     var returnToRepair = false
     var returnToPurchase = false
     private var refuelingCapacityOriginal: Int = -1
-    var currentRefuelingCapacity: Int = -1
-    private var originalRefuelTime = -1
+    var refuelingCapacity: Int = -1
     var refuelingTime: Int = -1
-    var isRefillingCapacity = false
-    var iDOFSHIPBEINGREFUELED = -1
-    var beingRefueledByShip = false
-    var refuelingShipCurrently = false
 
     /**
      * Accelerates the ship and increases its current velocity
@@ -89,14 +85,6 @@ class Ship(
     }
 
     /**
-     * Returns if the ship is refilling it's capacity during this tick.
-     */
-    fun isRefilling(): Boolean {
-        return waitingAtHarbor && waitingAtARefuelingStation &&
-            behaviour == Behaviour.REFUELING && isRefillingCapacity && type == ShipType.REFUELING
-    }
-
-    /**
      * Returns if the ship is unloading during this tick
      */
     fun isUnloading(): Boolean {
@@ -108,6 +96,13 @@ class Ship(
      */
     fun isRepairing(): Boolean {
         return waitingAtHarbor && waitingAtAShipyard && behaviour == Behaviour.REPAIRING
+    }
+
+    /**
+     * Returns if ship is buying this tick or not
+     */
+    fun isPurchasing(): Boolean {
+        return returnToPurchase
     }
 
     /**
@@ -133,18 +128,16 @@ class Ship(
      */
     fun setRefuelingCapacityAndTime(refuelingCapacity: Int, refuelingTime: Int) {
         // SHIP TYPE MUST BE REFUELING TYPE //TODO()
-        this.currentRefuelingCapacity = refuelingCapacity
+        this.refuelingCapacity = refuelingCapacity
         this.refuelingTime = refuelingTime
     }
 
     /**
      * Set original refueling capacity
      */
-    fun setOriginalRefuelCap(refuelingCapacity: Int, refuelingTime: Int) {
+    fun setOriginalRefuelCap(refuelingCapacity: Int) {
         this.refuelingCapacityOriginal = refuelingCapacity
-        this.currentRefuelingCapacity = refuelingCapacity
-        this.originalRefuelTime = refuelingTime
-        this.refuelingTime = refuelingTime
+        this.refuelingCapacity = refuelingCapacity
     }
 
     /**
@@ -152,12 +145,5 @@ class Ship(
      */
     fun getOriginalRefuelCap(): Int {
         return refuelingCapacityOriginal
-    }
-
-    /**
-     * Get original refueling Capacity
-     */
-    fun getOriginalRefuelTime(): Int {
-        return originalRefuelTime
     }
 }
