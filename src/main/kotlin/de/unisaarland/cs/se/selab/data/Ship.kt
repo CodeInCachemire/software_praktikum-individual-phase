@@ -52,8 +52,10 @@ class Ship(
 
     var beingRefueledByShip = false
     var refuelingShipCurrently = false
-    var shipIsClaimed = false
+
+    // var shipIsClaimed = false
     var shipToRefuel: Ship? = null
+    var isClaimedShip: Ship? = null
 
     /**
      * Accelerates the ship and increases its current velocity
@@ -162,5 +164,40 @@ class Ship(
      */
     fun setRefuelTimeBack() {
         this.tickCounter = this.refuelTimeOriginal
+    }
+
+    /**
+     * Restriction event triggers that ships are broken connectiona fter refueling
+     */
+    fun restrictionEventReset() {
+        if (type == ShipType.REFUELING) {
+            // reset for refueling Ship
+            tickCounter = refuelTimeOriginal
+            shipToRefuel = null
+            refuelingShipCurrently = false
+        }
+        // if it's the other ship then set it to false
+        beingRefueledByShip = false
+    }
+
+    /**
+     * Restriction event triggers that ships are broken connectiona fter refueling
+     */
+    fun driftedShipResetRefuel(shipBeingRefueled: Ship) {
+        // we check if we are on the same tile as the ship we were refueling
+        tickCounter = refuelTimeOriginal
+        shipToRefuel = null
+        refuelingShipCurrently = false
+        shipBeingRefueled.beingRefueledByShip = false
+    }
+
+    /**
+     * Restriction event triggers that ships are broken connectiona fter refueling
+     */
+    fun pirateEvent() {
+        // we check if we are on the same tile as the ship we were refueling
+        tickCounter = refuelTimeOriginal
+        shipToRefuel = null
+        refuelingShipCurrently = false
     }
 }

@@ -42,6 +42,7 @@ class Simulation(
             Logger.logTickStart(currentTick)
 
             for (corporation in corporations) {
+                // clearRefuelingShip(corporation)
                 corporation.ships.removeIf { !oceanMap.getShipExists(it) }
                 visibilityHandler.updateCorpInformation(corporation)
                 corporation.assignedShipsPerTile.clear()

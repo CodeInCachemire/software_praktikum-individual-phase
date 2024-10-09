@@ -35,24 +35,44 @@ class MovementHandler(
             ship.accelerate()
             moveShip(ship, shipTile)
 
-            if (ship.behaviour != Behaviour.REFUELING &&
-                ship.behaviour != Behaviour.UNLOADING && // TODO() CHECK THIS AGAIN
-                ship.behaviour != Behaviour.REPAIRING
-            ) {
-                ship.waitingAtHarbor = false // TODO() we set to false here
-            }
-            if (ship.behaviour != Behaviour.REFUELING) {
-                ship.waitingAtARefuelingStation = false
-            }
-            if (ship.behaviour != Behaviour.UNLOADING) {
-                ship.waitingAtAUnloadingStation = false
-            }
-            if (ship.behaviour != Behaviour.REPAIRING) {
-                ship.waitingAtAShipyard = false
-            }
+            behaviourChecks(ship)
+
             if (ship.type != ShipType.REFUELING) {
                 ship.task?.update(ship, oceanMap, movementPhase = true)
             }
+
+            if (ship.type == ShipType.REFUELING && ship.behaviour == Behaviour.DEFAULT) {
+                val currentTile = oceanMap.getShipTile(ship)
+                val shipsOnTile = oceanMap.getShipsOnTile(currentTile)
+                val foundShip = shipsOnTile.filter {
+                    !currentTile.restricted && it.id != ship.id && allowedToRefuel(ship, it)
+                }.minByOrNull { it.id }
+                if (foundShip != null) {
+                    // foundShip.shipIsClaimed = true
+                    ship.isClaimedShip = foundShip
+                }
+            }
+        }
+    }
+
+    /**
+     * Behaviour checks
+     */
+    fun behaviourChecks(ship: Ship) {
+        if (ship.behaviour != Behaviour.REFUELING &&
+            ship.behaviour != Behaviour.UNLOADING && // TODO() CHECK THIS AGAIN
+            ship.behaviour != Behaviour.REPAIRING
+        ) {
+            ship.waitingAtHarbor = false // TODO() we set to false here
+        }
+        if (ship.behaviour != Behaviour.REFUELING) {
+            ship.waitingAtARefuelingStation = false
+        }
+        if (ship.behaviour != Behaviour.UNLOADING) {
+            ship.waitingAtAUnloadingStation = false
+        }
+        if (ship.behaviour != Behaviour.REPAIRING) {
+            ship.waitingAtAShipyard = false
         }
     }
 
@@ -70,12 +90,22 @@ class MovementHandler(
         // with higher priority cases listed first.
         when { // TODO()
             onRestriction -> escapeRestriction(ship)
+            ship.beingRefueledByShip -> moveNoWhere(ship)
+            refuelingShipPresentOnTile(ship) -> moveNoWhere(ship)
             needsToRefuel -> moveToRefuel(ship)
             needsToRepair -> moveToRepair(ship)
             hasTask -> moveToTask(ship)
             needsToUnload -> moveToUnload(ship)
             else -> moveShipDefault(ship)
         }
+    }
+
+    /**
+     * Do not move anywhere this tick since refueling ship is on tile
+     */
+    private fun moveNoWhere(ship: Ship) {
+        ship.task = null
+        moveAlongPath(ship, emptyList())
     }
 
     /**
@@ -165,7 +195,9 @@ class MovementHandler(
         if (ship.isUnloading()) {
             ship.returnToUnload = false
         } else {
-            ship.returnToUnload = true
+            if (!ship.waitingAtHarbor) {
+                ship.returnToUnload = true
+            }
         }
         moveToUnloadHarbor(ship)
     }
@@ -197,17 +229,25 @@ class MovementHandler(
         val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithRefuelingStation)
         moveAlongPath(ship, path)
     }
-    /*
+
     /**
      * Refueling Ship Is Present
      */
-    private fun refuelingShipPresentOnTile(ship: Ship,shipTile: Tile):Boolean {
+    private fun refuelingShipPresentOnTile(ship: Ship): Boolean {
+        val shipTile = oceanMap.getShipTile(ship)
         val shipsOnTile = oceanMap.getShipsOnTile(shipTile)
-        val shipFuelLess = ship.fuel < (0.5 * ship.maxFuel)
-        val refuelingShipExists = shipsOnTile.filter { it.type == ShipType.REFUELING && it.id != ship.id }
-        val shipCanRefuel = refuelingShipExists.any {!(it as RefuelingShip).refuelingShipCurrently}
-        return shipFuelLess && shipCanRefuel
-    }*/
+        val shipFuelLess = ship.fuel < ship.maxFuel / 2
+        val shipFuelNeed = ship.maxFuel - ship.fuel
+        val refuelingShipExists = shipsOnTile
+            .any { refShip ->
+                refShip.type == ShipType.REFUELING &&
+                    refShip.id != ship.id &&
+                    refShip.currentRefuelingCapacity >= shipFuelNeed &&
+                    !refShip.refuelingShipCurrently &&
+                    !refShip.beingRefueledByShip
+            }
+        return shipFuelLess && refuelingShipExists
+    }
 
     /**
      * Move to unload harbor
@@ -221,9 +261,6 @@ class MovementHandler(
             if (garbageType in needsToUnload) {
                 val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, garbageType)
                 // if (tilesWithUnloadingStation.isNotEmpty()) {
-                if (shipTile in tilesWithUnloadingStation) {
-                    ship.waitingAtAUnloadingStation = true
-                }
                 val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)
                 moveAlongPath(ship, path)
                 return
@@ -369,24 +406,55 @@ class MovementHandler(
      */
     private fun getRefuelingPathDefault(ship: Ship): List<Tile> {
         val shipTile = oceanMap.getShipTile(ship)
-        /*if(ship.currentRefuelingCapacity == 0){
-            moveToRefill(ship)
+        if (ship.refuelingShipCurrently || ship.beingRefueledByShip) {
             return emptyList()
-        }*/
-        /*val shipsWhichWeCanRefuel =
-            ship.corporation.ships.filter { it.fuel < it.maxFuel / 2 && it.id != ship.id }
-                .filter { ship.refuelingCapacity >= it.maxFuel - it.fuel && !it.isRefueling() }
-                .filter { !it.beingRefueledByShip }
-                // .filter { !it.isRefueling() }
-                .associateBy { oceanMap.getShipTile(it) }
+        }
+        if (ship.currentRefuelingCapacity == 0) {
+            ship.behaviour = Behaviour.REFUELING
+            ship.returnToRefuel = true
+            ship.isRefillingCapacity = true
+            val tilesWithRefuelingStation = oceanMap.getRefuelingStationHarborTiles()
+            return pathFinder.getShortesPathToHarbor(shipTile, tilesWithRefuelingStation)
+        }
+
+        val shipsWhichWeCanRefuel = visibilityHandler.getShipsInCorpVisibility(ship)
+            .mapValues { it.value.filter { otherShip -> allowedToRefuel(ship, otherShip) } }
+            .filter { it.value.isNotEmpty() }
+
         if (shipsWhichWeCanRefuel.isNotEmpty()) {
-            val shipTileMap = shipsWhichWeCanRefuel.entries.groupBy({ it.key }, { it.value })
             val path =
-                pathFinder.getShortestPathToShip(shipTile, shipTileMap)
+                pathFinder.getShortestPathToShip(shipTile, shipsWhichWeCanRefuel)
             return path
-        }*/
+        }
         // Otherwise don't move.
         return emptyList()
+    }
+
+    /**
+     * Ships we can refuel as a refueling ship
+     */
+    fun shipsToRefuel(ship: Ship): List<Ship> {
+        val shipsWhichWeCanRefuel =
+            ship.corporation.ships
+                .filter { it.fuel < it.maxFuel / 2 && it.id != ship.id }
+                .filter { ship.currentRefuelingCapacity >= it.maxFuel - it.fuel && !it.isRefueling() }
+                .filter { !it.beingRefueledByShip }
+        return shipsWhichWeCanRefuel
+    } // TODO() FOR THE TILE
+
+    /**
+     * Allowed to refuel
+     */
+    private fun allowedToRefuel(refuelship: Ship, otherShip: Ship): Boolean {
+        val otherShipTile = oceanMap.getShipTile(otherShip)
+        return refuelship.id != otherShip.id &&
+            refuelship.corporation.id == otherShip.corporation.id &&
+            otherShip.fuel < otherShip.maxFuel / 2.0 &&
+            refuelship.currentRefuelingCapacity >= otherShip.maxFuel - otherShip.fuel &&
+            !otherShip.refuelingShipCurrently &&
+            !otherShip.beingRefueledByShip && !otherShip.isRefueling() &&
+            otherShip.behaviour != Behaviour.ESCAPING && !otherShipTile.restricted
+        // !otherShip.shipIsClaimed &&
     }
 
     /**

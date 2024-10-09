@@ -20,6 +20,10 @@ class RestrictionEvent(
         Logger.logEvent(id, JsonKeys.RESTRICTION)
         for (tile in oceanMap.getTilesInRadius(location, radius)) {
             tile.numRestrictions++
+            val ships = oceanMap.getShipsOnTile(tile)
+            for (ship in ships) {
+                ship.restrictionEventReset()
+            }
         }
     }
 

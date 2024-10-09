@@ -7,6 +7,7 @@ import de.unisaarland.cs.se.selab.data.Garbage
 import de.unisaarland.cs.se.selab.data.OceanMap
 import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.data.Tile
+import de.unisaarland.cs.se.selab.enums.ShipType
 
 /**
  * DriftHandler class handles the drift of garbage and ships
@@ -99,6 +100,21 @@ class DriftHandler(private val oceanMap: OceanMap) {
             if (tile != endTile) {
                 oceanMap.moveShip(ship, endTile)
                 Logger.logShipDrift(ship.id, tile.id, endTile.id)
+            }
+        }
+
+        // we will check that after the drift the ships are on the same tile for refuelng ships.
+        for (driftedShip in shipsToDrift) {
+            if (driftedShip.type == ShipType.REFUELING) {
+                val shipBeingRefueled = driftedShip.shipToRefuel
+                val driftedShipTile = oceanMap.getShipTile(driftedShip)
+                if (shipBeingRefueled == null) {
+                    continue
+                }
+                val shipBeingRefuelledTile = oceanMap.getShipTile(shipBeingRefueled)
+                if (shipBeingRefuelledTile != driftedShipTile) {
+                    driftedShip.driftedShipResetRefuel(shipBeingRefueled)
+                }
             }
         }
     }
