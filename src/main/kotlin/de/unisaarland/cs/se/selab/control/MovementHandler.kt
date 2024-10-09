@@ -123,11 +123,6 @@ class MovementHandler(
             ship.fuel = fuelNextTick
             oceanMap.moveShip(ship, intermediateDestination)
             Logger.logShipMove(ship.id, ship.velocity, intermediateDestination.id)
-            // val reachedDestination = intermediateDestination == path.lastOrNull()
-            /*if(reachedDestination) {
-                val shipTile = oceanMap.getShipTile(ship)
-                val harbor = oceanMap.tileToHarbor[shipTile]
-            }*/
         }
         val reachedDestination = intermediateDestination == path.lastOrNull()
         if (reachedDestination && ship.behaviour != Behaviour.EXPLORING) {
@@ -182,6 +177,7 @@ class MovementHandler(
     private fun moveToRepair(ship: Ship) {
         ship.behaviour = Behaviour.REPAIRING
         ship.task = null
+        ship.returnToPurchase = false
         if (ship.isRepairing()) {
             ship.returnToRepair = false
         } else {
@@ -225,6 +221,9 @@ class MovementHandler(
             if (garbageType in needsToUnload) {
                 val tilesWithUnloadingStation = oceanMap.getUnloadingHarborTiles(ship.corporation.id, garbageType)
                 // if (tilesWithUnloadingStation.isNotEmpty()) {
+                if (shipTile in tilesWithUnloadingStation) {
+                    ship.waitingAtAUnloadingStation = true
+                }
                 val path = pathFinder.getShortesPathToHarbor(shipTile, tilesWithUnloadingStation)
                 moveAlongPath(ship, path)
                 return
