@@ -1,6 +1,8 @@
 package de.unisaarland.cs.se.selab.control
 
 import de.unisaarland.cs.se.selab.Logger
+import de.unisaarland.cs.se.selab.data.Corporation
+import de.unisaarland.cs.se.selab.enums.ShipType
 import de.unisaarland.cs.se.selab.enums.TileType
 import de.unisaarland.cs.se.selab.parser.SimulationData
 
@@ -45,6 +47,7 @@ class Simulation(
                 corporation.ships.removeIf { !oceanMap.getShipExists(it) }
                 visibilityHandler.updateCorpInformation(corporation)
                 corporation.assignedShipsPerTile.clear()
+                clearRefuelingShip(corporation)
             }
 
             for (corporation in corporations) {
@@ -67,5 +70,27 @@ class Simulation(
         }
         Logger.logSimEnd()
         Logger.logStatistics(oceanMap.garbageToTile.keys.sumOf { it.amount })
+    }
+
+    /**
+     * Clears refueling assignments.
+     */
+    fun clearRefuelingShip(corporation: Corporation) {
+        val ships = corporation.ships
+        val refuelingShips = ships.filter { it.refuelingShipCurrently && it.type == ShipType.REFUELING }
+        for (refShip in refuelingShips) {
+            val refShipTile = oceanMap.getShipTile(refShip)
+            val shipID = refShip.iDOFSHIPBEINGREFUELED
+            if (shipID != -1) {
+                val shipBeingRefueled = ships[shipID]
+                val shipRefueledTile = oceanMap.getShipTile(shipBeingRefueled)
+                if (shipRefueledTile != refShipTile && shipBeingRefueled.beingRefueledByShip) {
+                    refShip.refuelingShipCurrently = false
+                    shipBeingRefueled.refuelingShipCurrently = false
+                    refShip.iDOFSHIPBEINGREFUELED = -1
+                    refShip.refuelingTime = refShip.getOriginalRefuelTime()
+                }
+            }
+        }
     }
 }
