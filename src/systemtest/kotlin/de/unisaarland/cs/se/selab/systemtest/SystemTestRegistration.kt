@@ -39,5 +39,8 @@ object SystemTestRegistration {
     fun registerSystemTestsMutantSimulation(manager: SystemTestManager) {
         manager.registerTest(TestTyphoonEvent())
         manager.registerTest(TestsPurchase())
+        manager.registerTest(RepairTest())
+        manager.registerTest(Test3Stations())
+        manager.registerTest(SimpleUnloadTest())
     }
 }
