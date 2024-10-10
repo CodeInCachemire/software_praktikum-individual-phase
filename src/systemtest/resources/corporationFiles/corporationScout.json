@@ -1,0 +1,67 @@
+{
+  "corporations": [
+    {
+      "id": 0,
+      "name": "Ocean",
+      "ships": [
+        1, 2, 3, 4
+      ],
+      "homeHarbors": [
+        0, 1, 2
+      ],
+      "garbageTypes": [],
+      "credits": 1200
+    }
+  ],
+
+  "ships": [
+    {
+      "id": 1,
+      "name": "Cod1",
+      "type": "SCOUTING",
+      "corporation": 0,
+      "location": 513,
+      "maxVelocity": 80,
+      "acceleration": 25,
+      "fuelCapacity": 3000,
+      "fuelConsumption": 10,
+      "visibilityRange": 2
+    },
+    {
+      "id": 2,
+      "name": "Cod2",
+      "type": "SCOUTING",
+      "corporation": 0,
+      "location": 513,
+      "maxVelocity": 80,
+      "acceleration": 25,
+      "fuelCapacity": 3000,
+      "fuelConsumption": 10,
+      "visibilityRange": 2
+    },
+    {
+      "id": 3,
+      "name": "Cod3",
+      "type": "SCOUTING",
+      "corporation": 0,
+      "location": 513,
+      "maxVelocity": 80,
+      "acceleration": 25,
+      "fuelCapacity": 3000,
+      "fuelConsumption": 10,
+      "visibilityRange": 2
+    },
+    {
+      "id": 4,
+      "name": "Cod4",
+      "type": "SCOUTING",
+      "corporation": 0,
+      "location": 513,
+      "maxVelocity": 80,
+      "acceleration": 25,
+      "fuelCapacity": 3000,
+      "fuelConsumption": 10,
+      "visibilityRange": 2
+    }
+  ]
+}

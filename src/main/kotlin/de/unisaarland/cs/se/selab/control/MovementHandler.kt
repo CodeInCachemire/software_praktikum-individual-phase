@@ -176,12 +176,13 @@ class MovementHandler(
             ship.velocity = 0
         }
     }
+
     private fun handleRefShip(ship: Ship) {
         if (ship.type == ShipType.REFUELING && ship.behaviour == Behaviour.DEFAULT) {
             val currentTile = oceanMap.getShipTile(ship)
             val shipsOnTile = oceanMap.getShipsOnTile(currentTile)
             val foundShip =
-                ship.corporation.ships
+                shipsOnTile
                     .filter { it.fuel < it.maxFuel / 2 && it.id != ship.id && !it.receivingRefuel }
                     .filter { ship.currentRefuelingCapacity >= it.maxFuel - it.fuel }
                     .filter { !it.activeRefueling } // TODO() ALSO CHECK

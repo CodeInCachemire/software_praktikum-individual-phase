@@ -1,0 +1,71 @@
+{
+  "garbage": [],
+  "events": [
+    {
+      "id": 0,
+      "type": "TYPHOON",
+      "tick": 1,
+      "location": 4,
+      "radius": 1,
+      "strength": 1
+    },
+    {
+      "id": 1,
+      "type": "TYPHOON",
+      "tick": 0,
+      "location": 4,
+      "radius": 1,
+      "strength": 1
+    },
+    {
+      "id": 2,
+      "type": "TYPHOON",
+      "tick": 0,
+      "location": 4,
+      "radius": 1,
+      "strength": 1
+    },
+    {
+      "id": 3,
+      "type": "TYPHOON",
+      "tick": 0,
+      "location": 4,
+      "radius": 1,
+      "strength": 1
+    },
+    {
+      "id": 4,
+      "type": "TYPHOON",
+      "tick": 0,
+      "location": 4,
+      "radius": 1,
+      "strength": 1
+    },
+    {
+      "id": 5,
+      "type": "TYPHOON",
+      "tick": 0,
+      "location": 4,
+      "radius": 1,
+      "strength": 1
+    },
+    {
+      "id": 6,
+      "type": "TYPHOON",
+      "tick": 18,
+      "location": 4,
+      "radius": 1,
+      "strength": 1
+    },
+    {
+      "id": 7,
+      "type": "TYPHOON",
+      "tick": 0,
+      "location": 4,
+      "radius": 1,
+      "strength": 1
+    }
+  ],
+  "tasks": [],
+  "rewards": []
+}

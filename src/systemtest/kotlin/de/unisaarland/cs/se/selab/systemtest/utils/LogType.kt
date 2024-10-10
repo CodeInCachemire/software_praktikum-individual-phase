@@ -7,11 +7,14 @@ package de.unisaarland.cs.se.selab.systemtest.utils
 enum class LogType(private val message: String) {
     INITIALIZATION_INFO("Initialization Info"),
     SIMULATION_INFO("Simulation Info"),
-    SIMULATION_STATISTICS("Simulation Statistics"),
     EVENT("Event"),
-    PURCHASE("Purchase"),
+    UNLOAD("Unload"),
     REPAIR("Repair"),
-    UNLOAD("Unload");
+    PURCHASE("Purchase"),
+    REFUELING("Refueling"),
+    SIMULATION_STATISTICS("Simulation Statistics"),
+    CORPORATION_ACTION("Corporation Action"),
+    SHIPMOVE("Ship Movement");
 
     override fun toString(): String {
         return message

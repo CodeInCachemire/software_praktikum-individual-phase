@@ -69,4 +69,41 @@ object LoggingUtils {
         return "Unload: Ship $shipID unloaded $amount of garbage $garbageType at harbor" +
             " $harborID and received $creditAmount credits."
     }
+
+    /**
+     * for refueling
+     */
+    fun logRefueling(shipID: Int, harborID: Int, amount: Int): String {
+        return "Refueling: Ship $shipID starts to refuel at harbor $harborID and paid $amount credits."
+    }
+
+    /**
+     */
+    fun logRefuelingFail(shipID: Int, harborID: Int): String {
+        return "Refueling: Ship $shipID cannot refuel at harbor $harborID."
+    }
+
+    /**
+     * Log corporation moving it's ships
+     */
+    fun logStartMove(corporationId: Int): String {
+        return "Corporation Action: Corporation $corporationId is starting to move its ships."
+    }
+
+    /**
+     * Log start of garbage collection for a corporation
+     */
+    fun logCorpCollectGarbage(corporationId: Int): String {
+        return "Corporation Action: Corporation $corporationId is starting to collect garbage."
+    }
+
+    /**
+     *
+     */
+    /**
+     * Log start of a tick.
+     */
+    fun logTickStart(tick: Int): String {
+        return "Simulation Info: Tick $tick started."
+    }
 }

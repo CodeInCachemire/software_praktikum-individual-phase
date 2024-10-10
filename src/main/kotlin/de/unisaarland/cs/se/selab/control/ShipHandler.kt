@@ -391,7 +391,6 @@ class ShipHandler(
                         // refShip.currentRefuelingCapacity >= shipFuelNeed &&
                         !refShip.activeRefueling &&
                         !refShip.receivingRefuel && refShip.behaviour != Behaviour.ESCAPING
-                    refShip.behaviour != Behaviour.REFUELING
                 }
             return refuelingShipExists
         }
