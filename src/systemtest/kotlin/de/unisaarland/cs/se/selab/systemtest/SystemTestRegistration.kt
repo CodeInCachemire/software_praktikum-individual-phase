@@ -18,9 +18,10 @@ object SystemTestRegistration {
         manager.registerTest(RepairTest())
         manager.registerTest(Test3Stations())
         manager.registerTest(SimpleUnloadTest())*/
-        manager.registerTest(NoLimitsMaybeTest())
+        manager.registerTest(TestsPurchase())
+        /*manager.registerTest(NoLimitsMaybeTest())
         manager.registerTest(NoLimitsTest2())
-        manager.registerTest(LotsOFTyphoons())
+        manager.registerTest(LotsOFTyphoons())*/
     }
 
     /**
@@ -45,5 +46,7 @@ object SystemTestRegistration {
         manager.registerTest(RepairTest())
         manager.registerTest(Test3Stations())
         manager.registerTest(SimpleUnloadTest())
+        manager.registerTest(NoLimitsMaybeTest())
+        manager.registerTest(NoLimitsTest2())
     }
 }
