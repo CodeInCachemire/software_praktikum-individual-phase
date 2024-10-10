@@ -41,6 +41,7 @@ class Ship(
     var returnToUnload = false
     var returnToRepair = false
     var returnToPurchase = false
+    var willBeRefueled = false
 
     var isRefillingCapacity = false
     private var refuelingCapacityOriginal: Int = -1
@@ -178,6 +179,7 @@ class Ship(
         }
         // if it's the other ship then set it to false
         receivingRefuel = false
+        willBeRefueled = false
     }
 
     /**
@@ -189,6 +191,7 @@ class Ship(
         shipToRefuel = null
         activeRefueling = false
         shipBeingRefueled.receivingRefuel = false
+        shipBeingRefueled.willBeRefueled = false
     }
 
     /**

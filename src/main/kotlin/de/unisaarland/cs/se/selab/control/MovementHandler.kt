@@ -167,10 +167,29 @@ class MovementHandler(
             ship.fuel = fuelNextTick
             oceanMap.moveShip(ship, intermediateDestination)
             Logger.logShipMove(ship.id, ship.velocity, intermediateDestination.id)
+            if (intermediateDestination == path.lastOrNull()) {
+                handleRefShip(ship)
+            }
         }
         val reachedDestination = intermediateDestination == path.lastOrNull()
         if (reachedDestination && ship.behaviour != Behaviour.EXPLORING) {
             ship.velocity = 0
+        }
+    }
+    private fun handleRefShip(ship: Ship) {
+        if (ship.type == ShipType.REFUELING && ship.behaviour == Behaviour.DEFAULT) {
+            val currentTile = oceanMap.getShipTile(ship)
+            val shipsOnTile = oceanMap.getShipsOnTile(currentTile)
+            val foundShip =
+                ship.corporation.ships
+                    .filter { it.fuel < it.maxFuel / 2 && it.id != ship.id && !it.receivingRefuel }
+                    .filter { ship.currentRefuelingCapacity >= it.maxFuel - it.fuel }
+                    .filter { !it.activeRefueling } // TODO() ALSO CHECK
+                    .filter { !it.isRefueling() } // TODO() RECHECK AFTER PUSH
+                    .minByOrNull { it.id }
+            if (foundShip != null) {
+                foundShip.willBeRefueled = true
+            }
         }
     }
 
@@ -470,6 +489,7 @@ class MovementHandler(
                 // .filter { refship.currentRefuelingCapacity >= it.maxFuel - it.fuel }
                 .filter { !it.activeRefueling } // TODO() ALSO CHECK
                 .filter { !it.isRefueling() } // TODO() RECHECK AFTER PUSH
+                .filter { !it.willBeRefueled }
         // path finder requries this since it does not accept a normal list rather a
         // Map of tile and ships on those tiles
         val shipTileMap = shipsWhichWeCanRefuel.associateBy { oceanMap.getShipTile(it) }

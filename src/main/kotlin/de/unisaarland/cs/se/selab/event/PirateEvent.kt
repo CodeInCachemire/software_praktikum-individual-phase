@@ -19,6 +19,7 @@ class PirateEvent(
         oceanMap.removeShip(ship)
         Logger.logEvent(id, JsonKeys.PIRATE_ATTACK)
         if (ship.receivingRefuel) {
+            ship.willBeRefueled = false
             for (refuelingShip in ship.corporation.ships) {
                 if (refuelingShip.shipToRefuel == ship) {
                     refuelingShip.pirateEvent()

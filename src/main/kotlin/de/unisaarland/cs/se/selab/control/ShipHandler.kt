@@ -278,6 +278,7 @@ class ShipHandler(
                 refShip.activeRefueling = false
                 refShip.tickCounter = refShip.getOriginalRefuelTime()
                 targetShip.receivingRefuel = false
+                targetShip.willBeRefueled = false
                 // both ship cases are handled
             }
         } else {
@@ -390,6 +391,7 @@ class ShipHandler(
                         // refShip.currentRefuelingCapacity >= shipFuelNeed &&
                         !refShip.activeRefueling &&
                         !refShip.receivingRefuel && refShip.behaviour != Behaviour.ESCAPING
+                    refShip.behaviour != Behaviour.REFUELING
                 }
             return refuelingShipExists
         }
