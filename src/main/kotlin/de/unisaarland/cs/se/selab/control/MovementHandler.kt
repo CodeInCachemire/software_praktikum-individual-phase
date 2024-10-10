@@ -254,18 +254,21 @@ class MovementHandler(
         val shipTile = oceanMap.getShipTile(ship)
         val shipsOnTile = oceanMap.getShipsOnTile(shipTile)
         // forgot case of a ship being damaged it will never repair otherwis
-        val shipFuelLessOrDamaged = ship.fuel < ship.maxFuel / 2 && !ship.isDamaged
-        val shipFuelNeed = ship.maxFuel - ship.fuel
-        val refuelingShipExists = shipsOnTile
-            .any { refShip ->
-                refShip.type == ShipType.REFUELING &&
-                    refShip.id != ship.id &&
-                    refShip.currentRefuelingCapacity >= shipFuelNeed &&
-                    shipFuelLessOrDamaged
-                !refShip.activeRefueling &&
-                    !refShip.receivingRefuel
-            }
-        return refuelingShipExists
+        val shipFuelLessOrDamaged = ship.fuel < ship.maxFuel / 2
+        // && ship.isDamaged
+        // val shipFuelNeed = ship.maxFuel - ship.fuel
+        if (shipFuelLessOrDamaged) {
+            val refuelingShipExists = shipsOnTile
+                .any { refShip ->
+                    refShip.type == ShipType.REFUELING &&
+                        refShip.id != ship.id &&
+                        // refShip.currentRefuelingCapacity >= shipFuelNeed &&
+                        !refShip.activeRefueling &&
+                        !refShip.receivingRefuel && refShip.behaviour != Behaviour.ESCAPING
+                }
+            return refuelingShipExists
+        }
+        return false
     }
 
     /**
@@ -439,7 +442,7 @@ class MovementHandler(
         // ENDCHECK
         // MISSING CHECK THAT REFUELING SHIP SHOULD ITSELF REFUEL
         val shipsToRefuelEmpty = shipsToRefuel(ship).isEmpty()
-        if (shipsToRefuelEmpty || refuelingShipPresentOnTile(ship)) { // refueling ship present on tile check
+        if (shipsToRefuelEmpty) { // || refuelingShipPresentOnTile(ship)) { // refueling ship present on tile check
             return emptyList()
         }
         // ENDCHECKED
@@ -464,7 +467,7 @@ class MovementHandler(
         val shipsWhichWeCanRefuel =
             refship.corporation.ships
                 .filter { it.fuel < it.maxFuel / 2 && it.id != refship.id && !it.receivingRefuel }
-                .filter { refship.currentRefuelingCapacity >= it.maxFuel - it.fuel }
+                // .filter { refship.currentRefuelingCapacity >= it.maxFuel - it.fuel }
                 .filter { !it.activeRefueling } // TODO() ALSO CHECK
                 .filter { !it.isRefueling() } // TODO() RECHECK AFTER PUSH
         // path finder requries this since it does not accept a normal list rather a
