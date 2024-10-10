@@ -224,11 +224,10 @@ class ShipHandler(
                 return
             }
         }
-        val shipProspects = refShip.corporation.ships
+        val shipProspects = oceanMap.getShipsOnTile(refShipTile)
             .filter {
-                oceanMap.getShipTile(it) == refShipTile &&
-                    it.fuel < it.maxFuel / 2 &&
-                    refuelCapacity >= it.maxFuel - it.fuel
+                it.fuel < it.maxFuel / 2 && it.corporation.id == refShip.corporation.id
+                refuelCapacity >= it.maxFuel - it.fuel
                 it.id != refShip.id && !it.beingRefueledByShip &&
                     (
                         !it.isRefueling() || (
@@ -322,7 +321,7 @@ class ShipHandler(
                     !refShip.beingRefueledByShip &&
                     refShip.behaviour != Behaviour.REFUELING && // refueling ship not refueling //TODO()
                     !ship.isRefillingCapacity &&
-                    ship.corporation.id == ship.corporation.id
+                    refShip.corporation.id == ship.corporation.id
             }
         return shipFuelLess && refuelingShipExists
     }

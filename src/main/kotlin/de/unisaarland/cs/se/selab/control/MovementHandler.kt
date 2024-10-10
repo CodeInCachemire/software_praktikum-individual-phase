@@ -31,6 +31,7 @@ class MovementHandler(
             if (shipTile in oceanMap.harborTiles) { // ////////THIS WILL CHANGE MUST CHANGE TO CORRECT HARBOR
                 // checkWhichHarbors(ship, shipTile) // if set to true then we execute in this phase
                 ship.waitingAtHarbor = true // TODO() CHECK THIS AGAIN
+                unloadingCheck(ship)
             }
             ship.accelerate()
             moveShip(ship, shipTile)
@@ -51,6 +52,19 @@ class MovementHandler(
                     // foundShip.shipIsClaimed = true
                     ship.isClaimedShip = foundShip
                 }
+            }
+        }
+    }
+
+    /**
+     * Unloading Test Report
+     */
+    fun unloadingCheck(ship: Ship) {
+        val shipTile = oceanMap.getShipTile(ship)
+        val harbor = oceanMap.tileToHarbor[shipTile]
+        if (harbor != null) {
+            if (harbor.hasUnloadingStation) {
+                ship.waitingAtAUnloadingStation = true
             }
         }
     }
@@ -195,9 +209,12 @@ class MovementHandler(
         if (ship.isUnloading()) {
             ship.returnToUnload = false
         } else {
-            if (!ship.waitingAtHarbor) {
-                ship.returnToUnload = true
-            }
+            ship.returnToUnload = true
+            // you just have one flag that you can finish unloading.
+            // go through the garbage types you want to unload,
+            // for each type you check for each one, am I currently on a harbor that can unload this
+            // refueling phase
+            // if you start the tick at a harbor you can unload, then you can unload.
         }
         moveToUnloadHarbor(ship)
     }
