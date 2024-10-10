@@ -50,8 +50,8 @@ class Ship(
     private var refuelTimeOriginal = -1
     var tickCounter: Int = -1
 
-    var beingRefueledByShip = false
-    var refuelingShipCurrently = false
+    var receivingRefuel = false
+    var activeRefueling = false
 
     // var shipIsClaimed = false
     var shipToRefuel: Ship? = null
@@ -174,10 +174,10 @@ class Ship(
             // reset for refueling Ship
             tickCounter = refuelTimeOriginal
             shipToRefuel = null
-            refuelingShipCurrently = false
+            activeRefueling = false
         }
         // if it's the other ship then set it to false
-        beingRefueledByShip = false
+        receivingRefuel = false
     }
 
     /**
@@ -187,8 +187,8 @@ class Ship(
         // we check if we are on the same tile as the ship we were refueling
         tickCounter = refuelTimeOriginal
         shipToRefuel = null
-        refuelingShipCurrently = false
-        shipBeingRefueled.beingRefueledByShip = false
+        activeRefueling = false
+        shipBeingRefueled.receivingRefuel = false
     }
 
     /**
@@ -198,6 +198,6 @@ class Ship(
         // we check if we are on the same tile as the ship we were refueling
         tickCounter = refuelTimeOriginal
         shipToRefuel = null
-        refuelingShipCurrently = false
+        activeRefueling = false
     }
 }

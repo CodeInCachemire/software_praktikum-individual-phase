@@ -6,6 +6,7 @@ import de.unisaarland.cs.se.selab.data.Garbage
 import de.unisaarland.cs.se.selab.data.OceanMap
 import de.unisaarland.cs.se.selab.data.Ship
 import de.unisaarland.cs.se.selab.data.ShipyardStation
+import de.unisaarland.cs.se.selab.data.Tile
 import de.unisaarland.cs.se.selab.data.UnloadingStation
 import de.unisaarland.cs.se.selab.enums.Behaviour
 import de.unisaarland.cs.se.selab.enums.GarbageType
@@ -175,25 +176,19 @@ class ShipHandler(
         // RUN FOR REFUELING SHIPS
         for (ship in corporation.ships) {
             val shipTile = oceanMap.getShipTile(ship)
-            if (!ship.beingRefueledByShip && !refuelingShipPresentOnTileOFSHIP(ship)) {
+            if (!ship.receivingRefuel && !refuelingShipPresentOnTile(ship)) {
                 val shipOnRefuelTile = shipTile in oceanMap.getRefuelingStationHarborTiles()
                 if ((ship.returnToRefuel || ship.waitingAtARefuelingStation) && shipOnRefuelTile) {
                     refuelAndRefillShip(ship)
                 }
             }
         }
-        /*for (ship in corporation.ships) {
-            if (ship.isClaimedShip != null) {
-                refuelingByAShip(ship)
-                return
-            }
-        }*/
-        for (ship in corporation.ships.sortedBy { it.id }) {
+        for (ship in corporation.ships) { // .sortedBy { it.id }
             val allowRefuelShip = ship.behaviour != Behaviour.REFUELING &&
                 !oceanMap.getShipTile(ship).restricted && ship.type == ShipType.REFUELING &&
-                !ship.beingRefueledByShip
+                !ship.receivingRefuel
             if (allowRefuelShip) {
-                refuelingByAShip(ship)
+                refuelingByAAShip(ship)
             }
         }
     }
@@ -201,22 +196,22 @@ class ShipHandler(
     /**
      * REFUELING ANOTHER SHIP IF YOU YOURSELF ARE A REFUELING SHIP
      */
-    private fun refuelingByAShip(refShip: Ship) {
+    /*private fun refuelingByAShip(refShip: Ship) {
         val refShipTile = oceanMap.getShipTile(refShip) // t
         val refuelCapacity = refShip.currentRefuelingCapacity
-        if (refShip.refuelingShipCurrently && refShip.shipToRefuel != null) {
+        if (refShip.activeRefueling && refShip.shipToRefuel != null) {
             val shipREFUEL = refShip.shipToRefuel ?: return
             val shipTile = oceanMap.getShipTile(shipREFUEL)
-            if (shipREFUEL.beingRefueledByShip && refShipTile == shipTile) {
+            if (shipREFUEL.receivingRefuel && refShipTile == shipTile) {
                 refShip.tickCounter -= 1
                 if (refShip.tickCounter == 0) {
                     val amountToReduce = shipREFUEL.maxFuel - shipREFUEL.fuel
                     shipREFUEL.fuel = shipREFUEL.maxFuel
                     shipREFUEL.behaviour = Behaviour.DEFAULT
-                    shipREFUEL.beingRefueledByShip = false
+                    shipREFUEL.receivingRefuel = false
                     refShip.currentRefuelingCapacity -= amountToReduce
                     refShip.shipToRefuel = null
-                    refShip.refuelingShipCurrently = false
+                    refShip.activeRefueling = false
                     refShip.tickCounter = refShip.getOriginalRefuelTime()
                     Logger.logReuelingByShipEnd(refShip.id, shipREFUEL.id)
                     return
@@ -228,7 +223,7 @@ class ShipHandler(
             .filter {
                 it.fuel < it.maxFuel / 2 && it.corporation.id == refShip.corporation.id
                 refuelCapacity >= it.maxFuel - it.fuel
-                it.id != refShip.id && !it.beingRefueledByShip &&
+                it.id != refShip.id && !it.receivingRefuel &&
                     (
                         !it.isRefueling() || (
                             oceanMap.getShipTile(it) in oceanMap.getRefuelingStationHarborTiles() &&
@@ -240,14 +235,79 @@ class ShipHandler(
         if (refuelThisShip != null) {
             // refShip.isClaimedShip = null
             refShip.velocity = 0
-            refShip.refuelingShipCurrently = true
+            refShip.activeRefueling = true
             refShip.shipToRefuel = refuelThisShip
             refuelThisShip.velocity = 0
-            refuelThisShip.beingRefueledByShip = true
+            refuelThisShip.receivingRefuel = true
             refuelThisShip.behaviour = Behaviour.DEFAULT
             // refuelThisShip.tickCounter = refuelThisShip.getOriginalRefuelTime()
             // refuelThisShip.tickCounter = refuelThisShip.getOriginalRefuelTime()
             Logger.logReuelingByShipStart(refShip.id, refuelThisShip.id)
+        }
+    }*/
+
+    /**
+     * Refueling by a ship
+     */
+    fun refuelingByAAShip(refShip: Ship) {
+        // COMPLETE CODE REWRITE
+        val refShipTile = oceanMap.getShipTile(refShip)
+        if (refShip.activeRefueling) {
+            activeRefueling(refShip)
+        } else {
+            attemptRefueling(refShip, refShipTile)
+        }
+    }
+
+    /**
+     * ActiveRefueling
+     */
+    fun activeRefueling(refShip: Ship) {
+        val refShipTile = oceanMap.getShipTile(refShip)
+        val targetShip = refShip.shipToRefuel ?: return
+        val targetShipTile = oceanMap.getShipTile(targetShip)
+        if (targetShip.receivingRefuel && refShipTile == targetShipTile) {
+            refShip.tickCounter -= 1
+            if (refShip.tickCounter == 0) {
+                val fuelNeeded = targetShip.maxFuel - targetShip.fuel
+                targetShip.fuel = targetShip.maxFuel
+                refShip.currentRefuelingCapacity -= fuelNeeded
+                targetShip.behaviour = Behaviour.DEFAULT
+                Logger.logReuelingByShipEnd(refShip.id, targetShip.id)
+                refShip.shipToRefuel = null
+                refShip.activeRefueling = false
+                refShip.tickCounter = refShip.getOriginalRefuelTime()
+                targetShip.receivingRefuel = false
+                // both ship cases are handled
+            }
+        }
+    }
+
+    /**
+     * We attempt refueling now.
+     */
+    fun attemptRefueling(refShip: Ship, refShipTile: Tile) {
+        val potentialTargets = oceanMap.getShipsOnTile(refShipTile)
+            .filter { it.fuel < it.maxFuel / 2 }
+            .filter { it.maxFuel - it.fuel <= refShip.currentRefuelingCapacity }
+            .filter { !it.receivingRefuel } // could be our ship too} //TODO()
+            .filter {
+                !it.isRefueling() ||
+                    (oceanMap.getShipTile(it) in oceanMap.getRefuelingStationHarborTiles() && it.returnToRefuel)
+            }
+            .filter { refShip.corporation.id == it.corporation.id && refShip.id != it.id }
+        val targetShip = potentialTargets.minByOrNull { it.id }
+        if (targetShip != null) {
+            refShip.velocity = 0
+            refShip.activeRefueling = true
+            refShip.tickCounter = refShip.getOriginalRefuelTime()
+            refShip.shipToRefuel = targetShip
+            // reset ship being refueled
+            targetShip.velocity = 0 // TODO()
+            targetShip.task = null
+            targetShip.behaviour = Behaviour.DEFAULT
+            targetShip.receivingRefuel = true
+            Logger.logReuelingByShipStart(refShip.id, targetShip.id)
         }
     }
 
@@ -258,7 +318,7 @@ class ShipHandler(
         val shipTile = oceanMap.getShipTile(ship)
         val harbor = oceanMap.tileToHarbor.getValue(shipTile)
         val refuelingStation = harbor.refuelingStation ?: return
-        if (ship.beingRefueledByShip) {
+        if (ship.receivingRefuel) {
             return
         }
         if (!refuelingStation.stationNotClosed()) {
@@ -307,23 +367,22 @@ class ShipHandler(
     /**
      * Refueling Ship Is Present
      */
-    private fun refuelingShipPresentOnTileOFSHIP(ship: Ship): Boolean {
+    private fun refuelingShipPresentOnTile(ship: Ship): Boolean {
         val shipTile = oceanMap.getShipTile(ship)
         val shipsOnTile = oceanMap.getShipsOnTile(shipTile)
-        val shipFuelLess = ship.fuel < ship.maxFuel / 2
+        // forgot case of a ship being damaged it will never repair otherwis
+        val shipFuelLessOrDamaged = ship.fuel < ship.maxFuel / 2 && !ship.isDamaged
         val shipFuelNeed = ship.maxFuel - ship.fuel
         val refuelingShipExists = shipsOnTile
             .any { refShip ->
                 refShip.type == ShipType.REFUELING &&
                     refShip.id != ship.id &&
                     refShip.currentRefuelingCapacity >= shipFuelNeed &&
-                    !refShip.refuelingShipCurrently &&
-                    !refShip.beingRefueledByShip &&
-                    refShip.behaviour != Behaviour.REFUELING && // refueling ship not refueling //TODO()
-                    !ship.isRefillingCapacity &&
-                    refShip.corporation.id == ship.corporation.id
+                    shipFuelLessOrDamaged
+                !refShip.activeRefueling &&
+                    !refShip.receivingRefuel
             }
-        return shipFuelLess && refuelingShipExists
+        return refuelingShipExists
     }
 
     /**

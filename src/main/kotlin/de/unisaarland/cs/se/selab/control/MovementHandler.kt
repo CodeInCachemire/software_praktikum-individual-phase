@@ -41,7 +41,7 @@ class MovementHandler(
             if (ship.type != ShipType.REFUELING) {
                 ship.task?.update(ship, oceanMap, movementPhase = true)
             }
-
+            /*
             if (ship.type == ShipType.REFUELING && ship.behaviour == Behaviour.DEFAULT) {
                 val currentTile = oceanMap.getShipTile(ship)
                 val shipsOnTile = oceanMap.getShipsOnTile(currentTile)
@@ -52,7 +52,7 @@ class MovementHandler(
                     // foundShip.shipIsClaimed = true
                     ship.isClaimedShip = foundShip
                 }
-            }
+            }*/
         }
     }
 
@@ -104,8 +104,8 @@ class MovementHandler(
         // with higher priority cases listed first.
         when { // TODO()
             onRestriction -> escapeRestriction(ship)
-            ship.beingRefueledByShip -> moveNoWhere(ship)
             refuelingShipPresentOnTile(ship) -> moveNoWhere(ship)
+            ship.receivingRefuel -> moveNoWhere(ship)
             needsToRefuel -> moveToRefuel(ship)
             needsToRepair -> moveToRepair(ship)
             hasTask -> moveToTask(ship)
@@ -253,17 +253,19 @@ class MovementHandler(
     private fun refuelingShipPresentOnTile(ship: Ship): Boolean {
         val shipTile = oceanMap.getShipTile(ship)
         val shipsOnTile = oceanMap.getShipsOnTile(shipTile)
-        val shipFuelLess = ship.fuel < ship.maxFuel / 2
+        // forgot case of a ship being damaged it will never repair otherwis
+        val shipFuelLessOrDamaged = ship.fuel < ship.maxFuel / 2 && !ship.isDamaged
         val shipFuelNeed = ship.maxFuel - ship.fuel
         val refuelingShipExists = shipsOnTile
             .any { refShip ->
                 refShip.type == ShipType.REFUELING &&
                     refShip.id != ship.id &&
                     refShip.currentRefuelingCapacity >= shipFuelNeed &&
-                    !refShip.refuelingShipCurrently &&
-                    !refShip.beingRefueledByShip
+                    shipFuelLessOrDamaged
+                !refShip.activeRefueling &&
+                    !refShip.receivingRefuel
             }
-        return shipFuelLess && refuelingShipExists
+        return refuelingShipExists
     }
 
     /**
@@ -423,9 +425,10 @@ class MovementHandler(
      */
     private fun getRefuelingPathDefault(ship: Ship): List<Tile> {
         val shipTile = oceanMap.getShipTile(ship)
-        if (ship.refuelingShipCurrently || ship.beingRefueledByShip) {
+        if (ship.activeRefueling) {
             return emptyList()
         }
+        // PARTCHECKED
         if (ship.currentRefuelingCapacity == 0) {
             ship.behaviour = Behaviour.REFUELING
             ship.returnToRefuel = true
@@ -433,16 +436,22 @@ class MovementHandler(
             val tilesWithRefuelingStation = oceanMap.getRefuelingStationHarborTiles()
             return pathFinder.getShortesPathToHarbor(shipTile, tilesWithRefuelingStation)
         }
+        // ENDCHECK
+        // MISSING CHECK THAT REFUELING SHIP SHOULD ITSELF REFUEL
+        val shipsToRefuelEmpty = shipsToRefuel(ship).isEmpty()
+        if (shipsToRefuelEmpty || refuelingShipPresentOnTile(ship)) { // refueling ship present on tile check
+            return emptyList()
+        }
+        // ENDCHECKED
 
-        val shipsWhichWeCanRefuel = visibilityHandler.getShipsInCorpVisibility(ship)
-            .mapValues { it.value.filter { otherShip -> allowedToRefuel(ship, otherShip) } }
-            .filter { it.value.isNotEmpty() }
-
-        if (shipsWhichWeCanRefuel.isNotEmpty()) {
+        if (shipsToRefuel(ship).isNotEmpty()) {
+            val shipsToRefuelResult = shipsToRefuel(ship)
+            val shipTileMap = shipsToRefuelResult.entries.groupBy({ it.key }, { it.value })
             val path =
-                pathFinder.getShortestPathToShip(shipTile, shipsWhichWeCanRefuel)
+                pathFinder.getShortestPathToShip(shipTile, shipTileMap)
             return path
         }
+
         // Otherwise don't move.
         return emptyList()
     }
@@ -450,29 +459,22 @@ class MovementHandler(
     /**
      * Ships we can refuel as a refueling ship
      */
-    fun shipsToRefuel(ship: Ship): List<Ship> {
+    fun shipsToRefuel(refship: Ship): Map<Tile, Ship> {
+        val emptyTileMap = emptyMap<Tile, Ship>()
         val shipsWhichWeCanRefuel =
-            ship.corporation.ships
-                .filter { it.fuel < it.maxFuel / 2 && it.id != ship.id }
-                .filter { ship.currentRefuelingCapacity >= it.maxFuel - it.fuel && !it.isRefueling() }
-                .filter { !it.beingRefueledByShip }
-        return shipsWhichWeCanRefuel
+            refship.corporation.ships
+                .filter { it.fuel < it.maxFuel / 2 && it.id != refship.id && !it.receivingRefuel }
+                .filter { refship.currentRefuelingCapacity >= it.maxFuel - it.fuel }
+                .filter { !it.activeRefueling } // TODO() ALSO CHECK
+                .filter { !it.isRefueling() } // TODO() RECHECK AFTER PUSH
+        // path finder requries this since it does not accept a normal list rather a
+        // Map of tile and ships on those tiles
+        val shipTileMap = shipsWhichWeCanRefuel.associateBy { oceanMap.getShipTile(it) }
+        if (shipTileMap.isNotEmpty()) {
+            return shipTileMap
+        }
+        return emptyTileMap
     } // TODO() FOR THE TILE
-
-    /**
-     * Allowed to refuel
-     */
-    private fun allowedToRefuel(refuelship: Ship, otherShip: Ship): Boolean {
-        val otherShipTile = oceanMap.getShipTile(otherShip)
-        return refuelship.id != otherShip.id &&
-            refuelship.corporation.id == otherShip.corporation.id &&
-            otherShip.fuel < otherShip.maxFuel / 2 &&
-            refuelship.currentRefuelingCapacity >= otherShip.maxFuel - otherShip.fuel &&
-            !otherShip.refuelingShipCurrently &&
-            !otherShip.beingRefueledByShip && !otherShip.isRefueling() &&
-            otherShip.behaviour != Behaviour.ESCAPING && !otherShipTile.restricted
-        // !otherShip.shipIsClaimed &&
-    }
 
     /**
      * Checks if corporation hasn't already sent enough ships
