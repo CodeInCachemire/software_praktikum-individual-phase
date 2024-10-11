@@ -78,7 +78,7 @@ class PurchaseHandler(
         // a task, or on the way to refuel and has an existing path to the harbor with the shipyard
         // station.
         val checkingCondition = ship.behaviour == Behaviour.ESCAPING ||
-            ship.task != null || ship.behaviour == Behaviour.REFUELING
+            ship.task != null || ship.behaviour == Behaviour.REFUELING || ship.receivingRefuel
         if (checkingCondition) {
             return false
         }

@@ -539,6 +539,9 @@ class ShipHandler(
     private fun orderShip(corporation: Corporation) {
         val ship = corporation.ships.find { it.id == corporation.assignedBuyingShipId }
         if (ship != null) {
+            if (ship.receivingRefuel) {
+                return
+            }
             if (!ship.returnToPurchase) {
                 return
             }

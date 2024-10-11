@@ -56,7 +56,6 @@ class Ship(
 
     // var shipIsClaimed = false
     var shipToRefuel: Ship? = null
-    var isClaimedShip: Ship? = null
 
     /**
      * Accelerates the ship and increases its current velocity
