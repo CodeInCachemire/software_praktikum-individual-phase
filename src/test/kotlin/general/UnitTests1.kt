@@ -341,7 +341,7 @@ class UnitTests1 {
     }
 
     @Test
-    fun unloadingAtAStationHEerAndRefuel() {
+    fun unloadingAtAStationHeerAndRefuel() {
         oceanMap.shipToTile[ship4] = tile7
         ship4.returnToUnload = true
         ship4.garbageCapacity[GarbageType.CHEMICALS] = 0
