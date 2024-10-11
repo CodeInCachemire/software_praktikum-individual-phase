@@ -30,7 +30,7 @@ class MovementHandler(
             val shipTile = oceanMap.getShipTile(ship)
             if (shipTile in oceanMap.harborTiles) { // ////////THIS WILL CHANGE MUST CHANGE TO CORRECT HARBOR
                 // checkWhichHarbors(ship, shipTile) // if set to true then we execute in this phase
-                ship.waitingAtHarbor = true // TODO() CHECK THIS AGAIN
+                ship.waitingAtHarbor = true //
                 unloadingCheck(ship)
             }
             ship.accelerate()
@@ -41,18 +41,6 @@ class MovementHandler(
             if (ship.type != ShipType.REFUELING) {
                 ship.task?.update(ship, oceanMap, movementPhase = true)
             }
-            /*
-            if (ship.type == ShipType.REFUELING && ship.behaviour == Behaviour.DEFAULT) {
-                val currentTile = oceanMap.getShipTile(ship)
-                val shipsOnTile = oceanMap.getShipsOnTile(currentTile)
-                val foundShip = shipsOnTile.filter {
-                    !currentTile.restricted && it.id != ship.id && allowedToRefuel(ship, it)
-                }.minByOrNull { it.id }
-                if (foundShip != null) {
-                    // foundShip.shipIsClaimed = true
-                    ship.isClaimedShip = foundShip
-                }
-            }*/
         }
     }
 
@@ -74,10 +62,10 @@ class MovementHandler(
      */
     fun behaviourChecks(ship: Ship) {
         if (ship.behaviour != Behaviour.REFUELING &&
-            ship.behaviour != Behaviour.UNLOADING && // TODO() CHECK THIS AGAIN
+            ship.behaviour != Behaviour.UNLOADING &&
             ship.behaviour != Behaviour.REPAIRING
         ) {
-            ship.waitingAtHarbor = false // TODO() we set to false here
+            ship.waitingAtHarbor = false
         }
         if (ship.behaviour != Behaviour.REFUELING) {
             ship.waitingAtARefuelingStation = false
@@ -102,7 +90,7 @@ class MovementHandler(
 
         // Conditions are prioritized top to bottom,
         // with higher priority cases listed first.
-        when { // TODO()
+        when {
             onRestriction -> escapeRestriction(ship)
             refuelingShipPresentOnTile(ship) -> moveNoWhere(ship)
             ship.receivingRefuel -> moveNoWhere(ship)
@@ -151,11 +139,11 @@ class MovementHandler(
         // then we have to check if we can make it back from the intermediate destination
         // to the harbor in the next tick and if not we will go refueling instead.
         if (ship.behaviour != Behaviour.REFUELING &&
-            ship.behaviour != Behaviour.ESCAPING && // YOU WOULD ADD damaged condition here so if damaged return
+            ship.behaviour != Behaviour.ESCAPING && //
             !pathFinder.isReachableWithinDistance(
                 intermediateDestination,
                 // ship.corporation.harbors,
-                // TODO() THIS SHOULD BE LIST OF REFUELING HARBORS, and then we should move by lowest harbor ID
+                // THIS SHOULD BE LIST OF REFUELING HARBORS, and then we should move by lowest harbor ID
                 refuelingHarbors,
                 reachableDistance
             )
@@ -185,8 +173,8 @@ class MovementHandler(
                 shipsOnTile
                     .filter { it.fuel < it.maxFuel / 2 && it.id != ship.id && !it.receivingRefuel }
                     .filter { ship.currentRefuelingCapacity >= it.maxFuel - it.fuel }
-                    .filter { !it.activeRefueling } // TODO() ALSO CHECK
-                    .filter { !it.isRefueling() } // TODO() RECHECK AFTER PUSH
+                    .filter { !it.activeRefueling } //
+                    .filter { !it.isRefueling() } //
                     .minByOrNull { it.id }
             if (foundShip != null) {
                 foundShip.willBeRefueled = true
@@ -211,7 +199,7 @@ class MovementHandler(
     private fun moveToRefuel(ship: Ship) {
         ship.behaviour = Behaviour.REFUELING
         ship.task = null
-        ship.returnToPurchase = false // TODO()
+        ship.returnToPurchase = false //
         if (ship.isRefueling()) {
             ship.returnToRefuel = false
         } else {
@@ -294,7 +282,7 @@ class MovementHandler(
     /**
      * Move to unload harbor
      */
-    private fun moveToUnloadHarbor(ship: Ship) { // //TODO()))
+    private fun moveToUnloadHarbor(ship: Ship) {
         val shipTile = oceanMap.getShipTile(ship)
         val needsToUnload = ship.garbageCapacity.filter { it.value == 0 }.keys
         // var path = emptyList<Tile>()
@@ -488,8 +476,8 @@ class MovementHandler(
             refship.corporation.ships
                 .filter { it.fuel < it.maxFuel / 2 && it.id != refship.id && !it.receivingRefuel }
                 // .filter { refship.currentRefuelingCapacity >= it.maxFuel - it.fuel }
-                .filter { !it.activeRefueling } // TODO() ALSO CHECK
-                .filter { !it.isRefueling() } // TODO() RECHECK AFTER PUSH
+                .filter { !it.activeRefueling } //
+                .filter { !it.isRefueling() } //
                 .filter { !it.willBeRefueled }
         // path finder requries this since it does not accept a normal list rather a
         // Map of tile and ships on those tiles
@@ -498,7 +486,7 @@ class MovementHandler(
             return shipTileMap
         }
         return emptyTileMap
-    } // TODO() FOR THE TILE
+    }
 
     /**
      * Checks if corporation hasn't already sent enough ships

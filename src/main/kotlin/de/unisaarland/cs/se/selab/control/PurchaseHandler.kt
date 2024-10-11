@@ -8,14 +8,14 @@ import de.unisaarland.cs.se.selab.enums.Behaviour
 import de.unisaarland.cs.se.selab.enums.ShipType
 
 /**
- * BurchaseHandler hehe is handling za order and za burchase.
+ * PurchaseHandler is handling the order and the purchase.
  */
 class PurchaseHandler(
     private val oceanMap: OceanMap,
     private val pathFinder: PathFinder
 ) {
     /**
-     * It is za burchase phase, where we will see if we can burchase anything or not.
+     * It is the purchase phase, where we will see if we can purchase anything or not.
      */
     fun purchasePhase(corporation: Corporation) {
         if (corporation.isBuyingShip) {
@@ -59,7 +59,7 @@ class PurchaseHandler(
     }
 
     /**
-     * Update za order and leave the shawarma station, sorry I mean za shipyard station.
+     * Update the order and leave the shipyard station
      */
     fun updateOrderStatus(corporation: Corporation) {
         if (corporation.purchaseCounter != 0 && corporation.purchaseCounter > 0) {

@@ -146,7 +146,7 @@ object Logger {
         printer.println("Corporation Action: Corporation $corporationId is starting to refuel.")
         printer.flush()
     }
-    // ///////////////////////////////TODO(): HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+    // ///////////////////////////////
     /**
      * Log start of refueling of a ship.
      */

@@ -37,7 +37,7 @@ class EventHandler(
                     visibilityHandler.globalUpdateCorpInformation(event.createdGarbage)
                 }
                 is DurationEvent -> {
-                    activeEvents.add(event) // TODO()
+                    activeEvents.add(event)
                 }
                 is TyphoonEvent -> {
                     visibilityHandler.globalUpdateCorpInformation(event.createdGarbage)

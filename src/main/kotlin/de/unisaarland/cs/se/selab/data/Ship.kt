@@ -160,13 +160,6 @@ class Ship(
     }
 
     /**
-     * Get the original refueling time.
-     */
-    fun setRefuelTimeBack() {
-        this.tickCounter = this.refuelTimeOriginal
-    }
-
-    /**
      * Restriction event triggers that ships are broken connectiona fter refueling
      */
     fun restrictionEventReset() {
