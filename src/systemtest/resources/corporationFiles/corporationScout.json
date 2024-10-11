@@ -4,13 +4,13 @@
       "id": 0,
       "name": "Ocean",
       "ships": [
-        1, 2, 3, 4
+        1, 2, 3, 4, 5, 6
       ],
       "homeHarbors": [
         0, 1, 2
       ],
       "garbageTypes": [],
-      "credits": 1200
+      "credits": 6000
     }
   ],
 
@@ -22,7 +22,7 @@
       "corporation": 0,
       "location": 513,
       "maxVelocity": 80,
-      "acceleration": 25,
+      "acceleration": 15,
       "fuelCapacity": 3000,
       "fuelConsumption": 10,
       "visibilityRange": 2
@@ -34,7 +34,7 @@
       "corporation": 0,
       "location": 513,
       "maxVelocity": 80,
-      "acceleration": 25,
+      "acceleration": 15,
       "fuelCapacity": 3000,
       "fuelConsumption": 10,
       "visibilityRange": 2
@@ -46,7 +46,7 @@
       "corporation": 0,
       "location": 513,
       "maxVelocity": 80,
-      "acceleration": 25,
+      "acceleration": 15,
       "fuelCapacity": 3000,
       "fuelConsumption": 10,
       "visibilityRange": 2
@@ -58,7 +58,31 @@
       "corporation": 0,
       "location": 513,
       "maxVelocity": 80,
-      "acceleration": 25,
+      "acceleration": 15,
+      "fuelCapacity": 3000,
+      "fuelConsumption": 10,
+      "visibilityRange": 2
+    },
+    {
+      "id": 5,
+      "name": "Cod5",
+      "type": "SCOUTING",
+      "corporation": 0,
+      "location": 513,
+      "maxVelocity": 80,
+      "acceleration": 15,
+      "fuelCapacity": 3000,
+      "fuelConsumption": 10,
+      "visibilityRange": 2
+    },
+    {
+      "id": 6,
+      "name": "Cod6",
+      "type": "SCOUTING",
+      "corporation": 0,
+      "location": 513,
+      "maxVelocity": 80,
+      "acceleration": 15,
       "fuelCapacity": 3000,
       "fuelConsumption": 10,
       "visibilityRange": 2

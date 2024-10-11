@@ -12,7 +12,7 @@ class LotsOFTyphoons : SystemTestExtension() {
     override val description = "Test if ship repairs after typhoon."
     override val name = "Repair post typhoon check."
 
-    override val map = "mapFiles/smallMap.json"
+    override val map = "mapFiles/smallMap2.json"
     override val corporations = "corporationFiles/lotsOfTyphoon.json"
     override val scenario = "scenarioFiles/lotsOfTyphoons.json"
 

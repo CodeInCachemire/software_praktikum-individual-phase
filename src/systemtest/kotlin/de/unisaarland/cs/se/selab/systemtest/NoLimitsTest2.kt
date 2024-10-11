@@ -20,12 +20,19 @@ class NoLimitsTest2 : SystemTestExtension() {
     override val scenario = "scenarioFiles/nothing.json"
 
     // max ticks parameter for the test execution
-    override val maxTicks = 5
+    override val maxTicks = 10
     override suspend fun run() {
         // skipping until the statistics:
         skipUntilAndAssert(LogType.REFUELING, LoggingUtils.logRefueling(1, 0, 450))
         skipUntilAndAssert(LogType.REFUELING, LoggingUtils.logRefueling(2, 0, 450))
-        skipUntilAndAssert(LogType.REFUELING, LoggingUtils.logRefuelingFail(3, 0))
-        skipUntilAndAssert(LogType.REFUELING, LoggingUtils.logRefuelingFail(4, 0))
+        skipUntilAndAssert(LogType.REFUELING, LoggingUtils.logRefueling(3, 0, 450))
+        skipUntilAndAssert(LogType.REFUELING, LoggingUtils.logRefueling(4, 0, 450))
+        skipUntilAndAssert(LogType.REFUELING, LoggingUtils.logRefueling(5, 0, 450))
+        skipUntilAndAssert(LogType.REFUELING, LoggingUtils.logRefueling(6, 0, 450))
+        skipUntilAndAssert(LogType.REFUELING, "Refueling: Ship 1 refueled at harbor 0.")
+        skipUntilAndAssert(LogType.REFUELING, "Refueling: Ship 2 refueled at harbor 0.")
+        skipUntilAndAssert(LogType.REFUELING, "Refueling: Ship 3 refueled at harbor 0.")
+        skipUntilAndAssert(LogType.REFUELING, "Refueling: Ship 4 refueled at harbor 0.")
+        skipUntilAndAssert(LogType.REFUELING, "Refueling: Ship 5 refueled at harbor 0.")
     }
 }

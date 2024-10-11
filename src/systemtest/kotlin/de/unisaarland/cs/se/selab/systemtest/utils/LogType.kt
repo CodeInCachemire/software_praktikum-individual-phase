@@ -14,7 +14,8 @@ enum class LogType(private val message: String) {
     REFUELING("Refueling"),
     SIMULATION_STATISTICS("Simulation Statistics"),
     CORPORATION_ACTION("Corporation Action"),
-    SHIPMOVE("Ship Movement");
+    SHIPMOVE("Ship Movement"),
+    GARBAGE("Garbage Collection");
 
     override fun toString(): String {
         return message

@@ -5006,7 +5006,7 @@
       ],
       "refuelingStation": {
         "refuelCost": 450,
-        "refuelTimes": 5
+        "refuelTimes": 100
       },
       "unloadingStation": {
         "unloadReturn": 4,
@@ -5050,7 +5050,7 @@
       "unloadingStation": {
         "unloadReturn": 4,
         "garbageTypes": [
-          "PLASTIC", "OIL", "CHEMICALS"
+          "PLASTIC", "CHEMICALS"
         ]
       },
       "refuelingStation": {
