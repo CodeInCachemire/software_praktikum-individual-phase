@@ -34,5 +34,6 @@ class NoLimitsTest2 : SystemTestExtension() {
         skipUntilAndAssert(LogType.REFUELING, "Refueling: Ship 3 refueled at harbor 0.")
         skipUntilAndAssert(LogType.REFUELING, "Refueling: Ship 4 refueled at harbor 0.")
         skipUntilAndAssert(LogType.REFUELING, "Refueling: Ship 5 refueled at harbor 0.")
+        assertNextLine("Corporation Action: Corporation 0 finished its actions.")
     }
 }

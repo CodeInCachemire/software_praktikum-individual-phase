@@ -23,6 +23,7 @@ object SystemTestRegistration {
         manager.registerTest(NoLimitsTest2())
         manager.registerTest(LotsOFTyphoons())
         manager.registerTest(IllegalTest())
+        manager.registerTest(NoLimitsTEst1())
     }
 
     /**

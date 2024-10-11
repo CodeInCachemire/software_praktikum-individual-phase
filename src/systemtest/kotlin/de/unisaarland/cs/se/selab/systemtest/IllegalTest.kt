@@ -22,10 +22,12 @@ class IllegalTest : SystemTestExtension() {
         // the next line should be this:
         skipUntilAndAssert(LogType.GARBAGE, "Garbage Collection: Ship 1 collected 2000 of garbage PLASTIC with 3.")
         skipUntilAndAssert(LogType.GARBAGE, "Garbage Collection: Ship 1 collected 1000 of garbage OIL with 2.")
+        assertNextLine("Corporation Action: Corporation 0 is starting to cooperate with other corporations.")
         skipUntilAndAssert(
             LogType.UNLOAD,
             "Unload: Ship 1 unloaded 2000 of garbage PLASTIC " +
                 "at harbor 2 and received 8000 credits."
         )
+        assertNextLine("Corporation Action: Corporation 0 finished its actions.")
     }
 }
