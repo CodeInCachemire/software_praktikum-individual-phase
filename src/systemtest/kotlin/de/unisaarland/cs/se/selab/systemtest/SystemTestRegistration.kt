@@ -47,5 +47,8 @@ object SystemTestRegistration {
         manager.registerTest(RepairTest())
         manager.registerTest(Test3Stations())
         manager.registerTest(SimpleUnloadTest())
+        manager.registerTest(NoLimitsTest2())
+        manager.registerTest(LotsOFTyphoons())
+        manager.registerTest(IllegalTest())
     }
 }
